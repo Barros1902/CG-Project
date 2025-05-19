@@ -12,6 +12,10 @@ let scene, renderer, controls;
 let camera, cameras = [], activeCamera, ort_frontal, ort_lateral, ort_topo, perspective, moving;
 let torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot;
 let robotParts = [];
+let legUnion, feetUnion;
+let headRotationYAxis = -2, headRotationZAxis = 2;
+let legRotationYAxis = 0.5, legRotationZAxis = 3.5;
+let feetRotationYAxis = -16, feetRotationZAxis = 3;
 let isWireframeOn = false;
 
 /////////////////////
@@ -169,13 +173,63 @@ function onKeyDown(e) {
 			activeCamera = moving;
 			break;
 		case "7":
-			if (isWireframeOn){
+			if (isWireframeOn) {
 				switchWireframe(false);
 				isWireframeOn = false;
 			}
 			else {
 				switchWireframe(true);
 				isWireframeOn = true;
+			}
+			break;
+		case "R":
+		case "r":
+			if (head.rotation.x < 3.14) {
+				head.rotation.x += 10 * (Math.PI / 180);
+			}
+			break;
+		case "F":
+		case "f":
+			if (head.rotation.x > 0) {
+				head.rotation.x -= 10 * (Math.PI / 180);
+			}
+			break;
+		case "W":
+		case "w":
+			if (legUnion.rotation.x > -1.57) {
+				legUnion.rotation.x -= 10 * (Math.PI / 180);
+			}
+			break;
+		case "S":
+		case "s":
+			if (legUnion.rotation.x < 0) {
+				legUnion.rotation.x += 10 * (Math.PI / 180);
+			}
+			break;
+		case "Q":
+		case "q":
+			if (feetUnion.rotation.x > -1.57) {
+				feetUnion.rotation.x -= 10 * (Math.PI / 180);
+			}
+			break;
+		case "A":
+		case "a":
+			if (feetUnion.rotation.x < 0) {
+				feetUnion.rotation.x += 10 * (Math.PI / 180);
+			}
+			break;
+		case "E":
+		case "e":
+			if (leftArm.position.x > 4.5) {
+				leftArm.position.x -= 0.5;
+				rightArm.position.x += 0.5;
+			}
+			break;
+		case "D":
+		case "d":
+			if (leftArm.position.x < 7.5) {
+				leftArm.position.x += 0.5;
+				rightArm.position.x -= 0.5;
 			}
 			break;
 	} 
@@ -224,19 +278,19 @@ function createHead(x, y, z) {
 	head = new THREE.Object3D();
 
 	// Part 1/6
-	createPart(head,"cylinder", 0, 0, 0, 0x0000ff, false, 2, 4, 2);
+	createPart(head,"cylinder", 0, 0 - headRotationYAxis, 0 - headRotationZAxis, 0x0000ff, false, 2, 4, 2);
 	// Part 2/6
-	createPart(head,"cylinder", -2.25, 1.5 , 0, 0x5b5b5b, false, 0.25, 7, 0.25);
+	createPart(head,"cylinder", -2.25, 1.5 - headRotationYAxis, 0 - headRotationZAxis, 0x5b5b5b, false, 0.25, 7, 0.25);
 	// Part 3/6
-	createPart(head,"cylinder", 2.25, 1.5, 0, 0x5b5b5b, false, 0.25, 7, 0.25);
+	createPart(head,"cylinder", 2.25, 1.5 - headRotationYAxis, 0 - headRotationZAxis, 0x5b5b5b, false, 0.25, 7, 0.25);
 	// Part 4/6
-	createPart(head,"cone", 0, 3, 0, 0x0000ff, false, 2, 2, 2);
+	createPart(head,"cone", 0, 3 - headRotationYAxis, 0 - headRotationZAxis, 0x0000ff, false, 2, 2, 2);
 	// Part 5/6
-	createPart(head,"sphere", 1, 1, -1.5, 0xffffff, false, 0.5, 0.5, 0.5);
+	createPart(head,"sphere", 1, 1 - headRotationYAxis, -1.5 - headRotationZAxis, 0xffffff, false, 0.5, 0.5, 0.5);
 	// Part 6/6
-	createPart(head,"sphere", -1, 1, -1.5, 0xffffff, false, 0.5, 0.5, 0.5);
+	createPart(head,"sphere", -1, 1 - headRotationYAxis, -1.5 - headRotationZAxis, 0xffffff, false, 0.5, 0.5, 0.5);
 
-	head.position.set(x, y, z);
+	head.position.set(x, y + headRotationYAxis, z + headRotationZAxis);
 	scene.add(head);
 	
 }
@@ -314,16 +368,49 @@ function createRightFoot(x,  y, z) {
 	scene.add(rightFoot);
 
 }
-function createRobo(){
+function createLegUnion() {
+	legUnion = new THREE.Object3D();
+	
+	legUnion.add(leftLeg);
+	legUnion.add(rightLeg);
+	legUnion.add(feetUnion);
+
+	leftLeg.position.y -= legRotationYAxis;
+	leftLeg.position.z -= legRotationZAxis;
+	rightLeg.position.y -= legRotationYAxis;
+	rightLeg.position.z -= legRotationZAxis;
+	feetUnion.position.y -= legRotationYAxis;
+	feetUnion.position.z -= legRotationZAxis;
+
+	legUnion.position.set(0, legRotationYAxis, legRotationZAxis);
+	scene.add(legUnion);
+}
+function createFeetUnion() {
+	feetUnion = new THREE.Object3D();
+	
+	feetUnion.add(leftFoot);
+	feetUnion.add(rightFoot);
+
+	leftFoot.position.y -= feetRotationYAxis;
+	leftFoot.position.z -= feetRotationZAxis;
+	rightFoot.position.y -= feetRotationYAxis;
+	rightFoot.position.z -= feetRotationZAxis;
+
+	feetUnion.position.set(0, feetRotationYAxis , feetRotationZAxis);
+	//scene.add(feetUnion);
+}
+function createRobo() {
 	createTorso(0, 0, 0);
-	createHead(0, 12.5, 2.5);
+	createHead(0, 12.5, 3.5);
 	createLeftArm(7.5, 6, 7);
 	createRightArm(-7.5, 6, 7);
 	createLeftLeg(2.5, -11.5, 3);
 	createRightLeg(-2.5, -11.5, 3);
 	createLeftFoot(3.5, -16.5, -0.5)
-	createRightFoot(-3.5, -16.5, -0.5)
+	createRightFoot(-3.5, -16.5, -0.5);
 	robotParts = [torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot];
+	createFeetUnion();
+	createLegUnion();
 }
 function createPart(obj, shape, xpos = 0, ypos = 0, zpos = 0, color = 0xFF0000, wireframe = false, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
 	let geometry;
@@ -358,6 +445,7 @@ function createPart(obj, shape, xpos = 0, ypos = 0, zpos = 0, color = 0xFF0000, 
 	return mesh;
 
 }
+
 //////////////////////
 /* ENABLE WIREFRAME */
 //////////////////////
