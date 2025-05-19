@@ -11,6 +11,8 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/ //TODO SOLVE IM
 let scene, renderer, controls;
 let camera, cameras = [], activeCamera, ort_frontal, ort_lateral, ort_topo, perspective, moving;
 let torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot;
+let robotParts = [];
+let isWireframeOn = false;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -166,6 +168,16 @@ function onKeyDown(e) {
 		case "t":
 			activeCamera = moving;
 			break;
+		case "7":
+			if (isWireframeOn){
+				switchWireframe(false);
+				isWireframeOn = false;
+			}
+			else {
+				switchWireframe(true);
+				isWireframeOn = true;
+			}
+			break;
 	} 
 	render();
 }
@@ -311,6 +323,7 @@ function createRobo(){
 	createRightLeg(-2.5, -11.5, 3);
 	createLeftFoot(3.5, -16.5, -0.5)
 	createRightFoot(-3.5, -16.5, -0.5)
+	robotParts = [torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot];
 }
 function createPart(obj, shape, xpos = 0, ypos = 0, zpos = 0, color = 0xFF0000, wireframe = false, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
 	let geometry;
@@ -345,6 +358,20 @@ function createPart(obj, shape, xpos = 0, ypos = 0, zpos = 0, color = 0xFF0000, 
 	return mesh;
 
 }
+//////////////////////
+/* ENABLE WIREFRAME */
+//////////////////////
+
+function switchWireframe(value){
+	robotParts.forEach(function(part) {
+		part.traverse(function(child){
+			if (child.material) {
+				child.material.wireframe = value;
+			}
+		});
+	});
+}
+
 //////////////////////
 /* EXTRA */
 //////////////////////
