@@ -12,6 +12,7 @@ let scene, renderer, controls;
 let camera, cameras = [], activeCamera, ort_frontal, ort_lateral, ort_topo, perspective, moving;
 let torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot;
 let robotParts = [];
+let Qkey = false, Akey = false, Wkey = false, Skey = false, Ekey = false, Dkey = false, Rkey = false, Fkey = false;
 let legUnion, feetUnion;
 let headRotationYAxis = -2, headRotationZAxis = 2;
 let legRotationYAxis = 0.5, legRotationZAxis = 3.5;
@@ -90,7 +91,50 @@ function handleCollisions() {}
 ////////////
 /* UPDATE */
 ////////////
-function update() {}
+function update() {
+	if(Qkey && !Akey){
+		if (feetUnion.rotation.x > -1.57) {
+			feetUnion.rotation.x -= 1.5 * (Math.PI / 180);
+		}
+	}
+	if(Akey && !Qkey){
+	if (feetUnion.rotation.x < 0) {
+			feetUnion.rotation.x += 1.5 * (Math.PI / 180);
+		}
+	}
+	if(Wkey && !Skey){
+		if (legUnion.rotation.x > -1.57) {
+			legUnion.rotation.x -= 1.5 * (Math.PI / 180);
+		}
+	}
+	if(Skey && !Wkey){
+		if (legUnion.rotation.x < 0) {
+			legUnion.rotation.x += 1.5 * (Math.PI / 180);
+		}
+	}
+	if(Ekey && !Dkey){
+		if (leftArm.position.x > 4.5) {
+			leftArm.position.x -= 0.05;
+			rightArm.position.x += 0.05;
+		}
+	}
+	if(Dkey && !Ekey){
+		if (leftArm.position.x < 7.5) {
+			leftArm.position.x += 0.05;
+			rightArm.position.x -= 0.05;
+		}
+	}
+	if(Rkey && !Fkey){
+		if (head.rotation.x < 3.14) {
+			head.rotation.x += 3 * (Math.PI / 180);
+		}
+	}
+	if(Fkey && !Rkey){
+		if (head.rotation.x > 0) {
+			head.rotation.x -= 3 * (Math.PI / 180);
+		}
+	}
+}
 
 /////////////
 /* DISPLAY */
@@ -116,15 +160,17 @@ function init() {
 	render();
 	window.addEventListener("resize", onResize);
 	window.addEventListener("keydown", onKeyDown);
+	window.addEventListener("keyup", onKeyUp);
 }
 
 /////////////////////
 /* ANIMATION CYCLE */
 /////////////////////
 function animate() {
-	requestAnimationFrame(animate);
 	controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+	update();
 	render();
+	requestAnimationFrame(animate);
 }
 
 ////////////////////////////
@@ -184,63 +230,79 @@ function onKeyDown(e) {
 			break;
 		case "R":
 		case "r":
-			if (head.rotation.x < 3.14) {
-				head.rotation.x += 10 * (Math.PI / 180);
-			}
+			Rkey = true;
 			break;
 		case "F":
 		case "f":
-			if (head.rotation.x > 0) {
-				head.rotation.x -= 10 * (Math.PI / 180);
-			}
+			Fkey = true;
 			break;
 		case "W":
 		case "w":
-			if (legUnion.rotation.x > -1.57) {
-				legUnion.rotation.x -= 10 * (Math.PI / 180);
-			}
+			Wkey = true;
 			break;
 		case "S":
 		case "s":
-			if (legUnion.rotation.x < 0) {
-				legUnion.rotation.x += 10 * (Math.PI / 180);
-			}
+			Skey = true;
 			break;
 		case "Q":
 		case "q":
-			if (feetUnion.rotation.x > -1.57) {
-				feetUnion.rotation.x -= 10 * (Math.PI / 180);
-			}
+			Qkey = true;
 			break;
 		case "A":
 		case "a":
-			if (feetUnion.rotation.x < 0) {
-				feetUnion.rotation.x += 10 * (Math.PI / 180);
-			}
+			Akey = true;
 			break;
 		case "E":
 		case "e":
-			if (leftArm.position.x > 4.5) {
-				leftArm.position.x -= 0.5;
-				rightArm.position.x += 0.5;
-			}
+			Ekey = true;
 			break;
 		case "D":
 		case "d":
-			if (leftArm.position.x < 7.5) {
-				leftArm.position.x += 0.5;
-				rightArm.position.x -= 0.5;
-			}
+			Dkey = true;
 			break;
 	} 
-	render();
 }
 
 ///////////////////////
 /* KEY UP CALLBACK */
 ///////////////////////
 
-function onKeyUp(e) {}
+function onKeyUp(e) {
+	switch (e.key) {
+		case "R":
+		case "r":
+			Rkey = false;
+			break;
+		case "F":
+		case "f":
+			Fkey = false;
+			break;
+		case "W":
+		case "w":
+			Wkey = false;
+			break;
+		case "S":
+		case "s":
+			Skey = false;
+			break;
+		case "Q":
+		case "q":
+			Qkey = false;
+			break;
+		case "A":
+		case "a":
+			Akey = false;
+			break;
+		case "E":
+		case "e":
+			Ekey = false;
+			break;
+		case "D":
+		case "d":
+			Dkey = false;
+			break;
+	}
+}
 
 //////////////////////
 /* ROBO PARTS */
