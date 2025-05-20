@@ -12,11 +12,13 @@ let scene, renderer, controls;
 let camera, cameras = [], activeCamera, ort_frontal, ort_lateral, ort_topo, perspective, moving;
 let torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot;
 let robotParts = [];
-let Qkey = false, Akey = false, Wkey = false, Skey = false, Ekey = false, Dkey = false, Rkey = false, Fkey = false;
+let trailer;
+let Qkey = false, Akey = false, Wkey = false, Skey = false, Ekey = false, Dkey = false, Rkey = false, Fkey = false, ArrowUp = false, ArrowDown = false, ArrowLeft = false, ArrowRight = false;
 let legUnion, feetUnion;
 let headRotationYAxis = -2, headRotationZAxis = 2;
 let legRotationYAxis = 0.5, legRotationZAxis = 3.5;
 let feetRotationYAxis = -16, feetRotationZAxis = 3;
+let rotationSpeed = 1.5, armsSpeed = 0.05, trailerSpeed = 0.2;
 let isWireframeOn = false;
 
 /////////////////////
@@ -94,45 +96,57 @@ function handleCollisions() {}
 function update() {
 	if(Qkey && !Akey){
 		if (feetUnion.rotation.x > -1.57) {
-			feetUnion.rotation.x -= 1.5 * (Math.PI / 180);
+			feetUnion.rotation.x -= rotationSpeed * (Math.PI / 180);
 		}
 	}
 	if(Akey && !Qkey){
 	if (feetUnion.rotation.x < 0) {
-			feetUnion.rotation.x += 1.5 * (Math.PI / 180);
+			feetUnion.rotation.x += rotationSpeed * (Math.PI / 180);
 		}
 	}
 	if(Wkey && !Skey){
 		if (legUnion.rotation.x > -1.57) {
-			legUnion.rotation.x -= 1.5 * (Math.PI / 180);
+			legUnion.rotation.x -= rotationSpeed * (Math.PI / 180);
 		}
 	}
 	if(Skey && !Wkey){
 		if (legUnion.rotation.x < 0) {
-			legUnion.rotation.x += 1.5 * (Math.PI / 180);
+			legUnion.rotation.x += rotationSpeed * (Math.PI / 180);
 		}
 	}
 	if(Ekey && !Dkey){
 		if (leftArm.position.x > 4.5) {
-			leftArm.position.x -= 0.05;
-			rightArm.position.x += 0.05;
+			leftArm.position.x -= armsSpeed;
+			rightArm.position.x += armsSpeed;
 		}
 	}
 	if(Dkey && !Ekey){
 		if (leftArm.position.x < 7.5) {
-			leftArm.position.x += 0.05;
-			rightArm.position.x -= 0.05;
+			leftArm.position.x += armsSpeed;
+			rightArm.position.x -= armsSpeed;
 		}
 	}
 	if(Rkey && !Fkey){
 		if (head.rotation.x < 3.14) {
-			head.rotation.x += 3 * (Math.PI / 180);
+			head.rotation.x += rotationSpeed * 2 * (Math.PI / 180);
 		}
 	}
 	if(Fkey && !Rkey){
 		if (head.rotation.x > 0) {
-			head.rotation.x -= 3 * (Math.PI / 180);
+			head.rotation.x -= rotationSpeed * 2 * (Math.PI / 180);
 		}
+	}
+	if(ArrowLeft && !ArrowRight){
+		trailer.position.x += trailerSpeed;
+	}
+	if(ArrowRight && !ArrowLeft){
+		trailer.position.x -= trailerSpeed;
+	}
+	if(ArrowUp && !ArrowDown){
+		trailer.position.y += trailerSpeed;
+	}
+	if(ArrowDown && !ArrowUp){
+		trailer.position.y -= trailerSpeed;
 	}
 }
 
@@ -156,6 +170,7 @@ function init() {
 	createScene();
 	createCameras();
 	createRobo();
+	createTrailer();
 	enableFreeCamera();
 	render();
 	window.addEventListener("resize", onResize);
@@ -260,6 +275,18 @@ function onKeyDown(e) {
 		case "d":
 			Dkey = true;
 			break;
+		case "ArrowUp":
+            ArrowUp = true;
+            break;
+        case "ArrowDown":
+            ArrowDown = true;
+            break;
+        case "ArrowLeft":
+            ArrowLeft = true;
+            break;
+        case "ArrowRight":
+            ArrowRight = true;
+            break;
 	} 
 }
 
@@ -301,6 +328,18 @@ function onKeyUp(e) {
 		case "d":
 			Dkey = false;
 			break;
+		case "ArrowUp":
+            ArrowUp = false;
+            break;
+        case "ArrowDown":
+            ArrowDown = false;
+            break;
+        case "ArrowLeft":
+            ArrowLeft = false;
+            break;
+        case "ArrowRight":
+            ArrowRight = false;
+            break;
 	}
 }
 
@@ -474,6 +513,20 @@ function createRobo() {
 	createFeetUnion();
 	createLegUnion();
 }
+
+//////////////////////
+/* TRAILER PARTS */
+//////////////////////
+
+function createTrailer() {
+	trailer = new THREE.Object3D();
+	// Part
+	createPart(trailer, "box", 0, 0, 0, 0x202020, false, 12, 12, 20);
+
+	trailer.position.set(10, 10, 20);
+	scene.add(trailer);
+}
+
 function createPart(obj, shape, xpos = 0, ypos = 0, zpos = 0, color = 0xFF0000, wireframe = false, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
 	let geometry;
 
