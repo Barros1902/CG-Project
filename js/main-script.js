@@ -520,10 +520,20 @@ function createRobo() {
 
 function createTrailer() {
 	trailer = new THREE.Object3D();
-	// Part
+	// Part 1/6
 	createPart(trailer, "box", 0, 0, 0, 0x202020, false, 12, 12, 20);
+	// Part 2/6
+	createPart(trailer,"cylinder", 5, -8, 7, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
+	// Part 3/6
+	createPart(trailer,"cylinder", 5, -8, 1, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
+	// Part 4/6
+	createPart(trailer,"cylinder", -5, -8, 7, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
+	// Part 5/6
+	createPart(trailer,"cylinder", -5, -8, 1, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
+	// Part 6/6
+	createPart(trailer, "box", 0, -7, -9.5, 0x202020, false, 1, 2, 1);
 
-	trailer.position.set(10, 10, 20);
+	trailer.position.set(10, 10, 27);
 	scene.add(trailer);
 }
 
