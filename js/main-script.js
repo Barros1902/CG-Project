@@ -143,10 +143,10 @@ function update() {
 		trailer.position.x -= trailerSpeed;
 	}
 	if(ArrowUp && !ArrowDown){
-		trailer.position.y += trailerSpeed;
+		trailer.position.z += trailerSpeed;
 	}
 	if(ArrowDown && !ArrowUp){
-		trailer.position.y -= trailerSpeed;
+		trailer.position.z -= trailerSpeed;
 	}
 }
 
@@ -533,7 +533,7 @@ function createTrailer() {
 	// Part 6/6
 	createPart(trailer, "box", 0, -7, -9.5, 0x202020, false, 1, 2, 1);
 
-	trailer.position.set(10, 10, 27);
+	trailer.position.set(10, 7.5, 27);
 	scene.add(trailer);
 }
 
