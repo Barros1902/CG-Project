@@ -11,7 +11,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/ //TODO SOLVE IM
 let scene, renderer, controls;
 let camera, cameras = [], activeCamera, ort_frontal, ort_lateral, ort_topo, perspective, moving;
 let torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot;
-let robotParts = [];
+let sceneparts = [];
 let trailer;
 let Qkey = false, Akey = false, Wkey = false, Skey = false, Ekey = false, Dkey = false, Rkey = false, Fkey = false, ArrowUp = false, ArrowDown = false, ArrowLeft = false, ArrowRight = false;
 let legUnion, feetUnion;
@@ -561,7 +561,6 @@ function createRobo() {
 	createRightLeg(-2.5, -11.5, 3);
 	createLeftFoot(3.5, -16.5, -0.5)
 	createRightFoot(-3.5, -16.5, -0.5);
-	robotParts = [torso, head, leftArm, rightArm, leftLeg, rightLeg, leftFoot, rightFoot];
 	createFeetUnion();
 	createLegUnion();
 }
@@ -630,12 +629,11 @@ function createPart(obj, shape, xpos = 0, ypos = 0, zpos = 0, color = 0xFF0000, 
 //////////////////////
 
 function switchWireframe(value){
-	robotParts.forEach(function(part) {
-		part.traverse(function(child){
-			if (child.material) {
-				child.material.wireframe = value;
-			}
-		});
+
+	scene.traverse((object) => {
+		if (object.isMesh) {
+			object.material.wireframe = value;
+		}
 	});
 }
 
