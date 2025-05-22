@@ -20,6 +20,9 @@ let legRotationYAxis = 0.5, legRotationZAxis = 3.5;
 let feetRotationYAxis = -16, feetRotationZAxis = 3;
 let rotationSpeed = 1.5, armsSpeed = 0.05, trailerSpeed = 0.2;
 let isWireframeOn = false;
+const trailerTargetPosition = new THREE.Vector3(0, 7.5, 27);
+let isTrailerAnimating = false;
+
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -83,12 +86,24 @@ function createCameras() {
 //////////////////////
 /* CHECK COLLISIONS */
 //////////////////////
-function checkCollisions() {}
+function checkCollisions() {
+    const trailerBox = new THREE.Box3().setFromObject(trailer);
+    const robotBox = new THREE.Box3().setFromObject(torso); // TODO: check if torso is the correct object to use
+
+
+    if (trailerBox.intersectsBox(robotBox)) {
+        handleCollisions();
+    }
+}
 
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
-function handleCollisions() {}
+function handleCollisions() {
+    if (!isTrailerAnimating) {
+        isTrailerAnimating = true;
+    }
+}
 
 ////////////
 /* UPDATE */
@@ -136,18 +151,28 @@ function update() {
 			head.rotation.x -= rotationSpeed * 2 * (Math.PI / 180);
 		}
 	}
-	if(ArrowLeft && !ArrowRight){
+	
+	checkCollisions();
+	if (isTrailerAnimating) {
+		trailer.position.lerp(trailerTargetPosition, 0.05);
+		if (trailer.position.distanceTo(trailerTargetPosition) < 0.05) {
+			trailer.position.copy(trailerTargetPosition);
+			isTrailerAnimating = false;
+		}
+	}
+	if(ArrowLeft && !ArrowRight && !isTrailerAnimating){
 		trailer.position.x += trailerSpeed;
 	}
-	if(ArrowRight && !ArrowLeft){
+	if(ArrowRight && !ArrowLeft && !isTrailerAnimating){
 		trailer.position.x -= trailerSpeed;
 	}
-	if(ArrowUp && !ArrowDown){
+	if(ArrowUp && !ArrowDown && !isTrailerAnimating){
 		trailer.position.z += trailerSpeed;
 	}
-	if(ArrowDown && !ArrowUp){
+	if(ArrowDown && !ArrowUp && !isTrailerAnimating){
 		trailer.position.z -= trailerSpeed;
 	}
+
 }
 
 /////////////
@@ -520,18 +545,20 @@ function createRobo() {
 
 function createTrailer() {
 	trailer = new THREE.Object3D();
-	// Part 1/6
+	// Part 1/7
 	createPart(trailer, "box", 0, 0, 0, 0x202020, false, 12, 12, 20);
-	// Part 2/6
+	// Part 2/7
 	createPart(trailer,"cylinder", 5, -8, 7, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
-	// Part 3/6
+	// Part 3/7
 	createPart(trailer,"cylinder", 5, -8, 1, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
-	// Part 4/6
+	// Part 4/7
 	createPart(trailer,"cylinder", -5, -8, 7, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
-	// Part 5/6
+	// Part 5/7
 	createPart(trailer,"cylinder", -5, -8, 1, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
-	// Part 6/6
+	// Part 6/7
 	createPart(trailer, "box", 0, -7, -9.5, 0x202020, false, 1, 2, 1);
+	// Part 7/7
+	createPart(trailer, "box", 0, -7.5, 4, 0x202020, false, 8, 3, 10);
 
 	trailer.position.set(10, 7.5, 27);
 	scene.add(trailer);
