@@ -21,7 +21,7 @@ let feetRotationYAxis = -16, feetRotationZAxis = 3;
 let rotationSpeed = 1.5, armsSpeed = 0.05, trailerSpeed = 0.2;
 let isWireframeOn = false;
 const trailerTargetPosition = new THREE.Vector3(0, 7.5, 27);
-let isTrailerAnimating = false;
+let isTrailerAnimating = false, isTrailerOn = false;
 let frustumSize = 35;
 let first_deg = false;
 let second_deg = false;
@@ -93,17 +93,32 @@ function createCameras() {
 /* CHECK COLLISIONS */
 //////////////////////
 function checkCollisions() {
-    const robotCenter = torso.position.clone();
-    const trailerCenter = trailer.position.clone();
-	const robotSize = new THREE.Vector3(12, 12, 20);
-	const trailerSize = new THREE.Vector3(12, 12, 20);
-    const robotAABB = getAABB(robotCenter, robotSize);
-    const trailerAABB = getAABB(trailerCenter, trailerSize);
+	if (!isTrailerOn && isTruck()) {
+		const robotCenter = torso.position.clone();
+		robotCenter.z += 11;
+		const trailerCenter = trailer.position.clone();
+		const robotSize = new THREE.Vector3(12, 12, 22);
+		const trailerSize = new THREE.Vector3(12, 12, 20);
+		const robotAABB = getAABB(robotCenter, robotSize);
+		const trailerAABB = getAABB(trailerCenter, trailerSize);
 
-    if (aabbIntersects(robotAABB, trailerAABB) && isTruck()) {
+		if(aabbIntersects(robotAABB, trailerAABB)){
+			handleCollisions();
+		}
+	}
+	if (isTrailerOn){
+		const robotCenter = torso.position.clone();
+		robotCenter.z += 11;
+		const trailerCenter = trailer.position.clone();
+		const robotSize = new THREE.Vector3(12, 12, 22);
+		const trailerSize = new THREE.Vector3(12, 12, 20);
+		const robotAABB = getAABB(robotCenter, robotSize);
+		const trailerAABB = getAABB(trailerCenter, trailerSize);
 
-        handleCollisions();
-    }
+		if(!isTruck() || !aabbIntersects(robotAABB, trailerAABB)){
+			isTrailerOn = false;
+		}
+	}
 }
 
 function getAABB(center, size) {
@@ -206,6 +221,7 @@ function update() {
 		if (trailer.position.distanceTo(trailerTargetPosition) < 0.05) {
 			trailer.position.copy(trailerTargetPosition);
 			isTrailerAnimating = false;
+			isTrailerOn = true;
 		}
 	}
 	if(ArrowLeft && !ArrowRight && !isTrailerAnimating){
@@ -431,19 +447,19 @@ function createTorso(x, y, z) {
 	// Part 1/10
 	createPart(torso,"box", 0, 0, 0, 0xb5b5b5, false, 12, 3, 1);
 	// Part 2/10
-	createPart(torso,"box", 0, 8, 2.5, 0xff0000, false, 1, 3, 6);
+	createPart(torso,"box", 0, 8, 2.5, 0xd00000, false, 1, 3, 6);
 	// Part 3/10
-	createPart(torso,"box", -5.5, 8, 2.5, 0xff0000, false, 1, 3, 6);
+	createPart(torso,"box", -5.5, 8, 2.5, 0xd00000, false, 1, 3, 6);
 	// Part 4/10
-	createPart(torso,"box", 5.5, 8, 2.5, 0xff0000, false, 1, 3, 6);
+	createPart(torso,"box", 5.5, 8, 2.5, 0xd00000, false, 1, 3, 6);
 	// Part 5/10
-	createPart(torso,"box", 0, 10, 2.5, 0xff0000, false, 12, 1, 6);
+	createPart(torso,"box", 0, 10, 2.5, 0xd00000, false, 12, 1, 6);
 	// Part 6/10
-	createPart(torso,"box", 0, 0, 3, 0xff0000, false, 8, 3, 5);
+	createPart(torso,"box", 0, 0, 3, 0xc00000, false, 8, 3, 5);
 	// Part 7/10
-	createPart(torso,"box", 0, 5.5, 2.5, 0xff0000, false, 12, 2, 6);
+	createPart(torso,"box", 0, 5.5, 2.5, 0xff1010, false, 12, 2, 6);
 	// Part 8/10
-	createPart(torso,"box", 0, 3, 2.5, 0xff0000, false, 6, 3, 6);
+	createPart(torso,"box", 0, 3, 2.5, 0xff1010, false, 6, 3, 6);
 	// Part 9/10
 	createPart(torso,"cylinder", -5, -0.5, 2.5, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
 	// Part 10/10
@@ -457,13 +473,13 @@ function createHead(x, y, z) {
 	head = new THREE.Object3D();
 
 	// Part 1/6
-	createPart(head,"cylinder", 0, 0 - headRotationYAxis, 0 - headRotationZAxis, 0x0000ff, false, 2, 4, 2);
+	createPart(head,"cylinder", 0, 0 - headRotationYAxis, 0 - headRotationZAxis, 0x0000f0, false, 2, 4, 2);
 	// Part 2/6
-	createPart(head,"cylinder", -2.25, 1.5 - headRotationYAxis, 0 - headRotationZAxis, 0x5b5b5b, false, 0.25, 7, 0.25);
+	createPart(head,"cylinder", -2.25, 1.5 - headRotationYAxis, 0 - headRotationZAxis, 0x000080, false, 0.25, 7, 0.25);
 	// Part 3/6
-	createPart(head,"cylinder", 2.25, 1.5 - headRotationYAxis, 0 - headRotationZAxis, 0x5b5b5b, false, 0.25, 7, 0.25);
+	createPart(head,"cylinder", 2.25, 1.5 - headRotationYAxis, 0 - headRotationZAxis, 0x000080, false, 0.25, 7, 0.25);
 	// Part 4/6
-	createPart(head,"cone", 0, 3 - headRotationYAxis, 0 - headRotationZAxis, 0x0000ff, false, 2, 2, 2);
+	createPart(head,"cone", 0, 3 - headRotationYAxis, 0 - headRotationZAxis, 0x000080, false, 2, 2, 2);
 	// Part 5/6
 	createPart(head,"sphere", 1, 1 - headRotationYAxis, -1.5 - headRotationZAxis, 0xffffff, false, 0.5, 0.5, 0.5);
 	// Part 6/6
@@ -476,9 +492,9 @@ function createHead(x, y, z) {
 function createLeftArm(x,  y, z) {
 	leftArm = new THREE.Object3D();
 	// Part 1/3
-	createPart(leftArm,"box", 0, 0, 0, 0xff0000, false, 3, 9, 3);
+	createPart(leftArm,"box", 0, 0, 0, 0xb00000, false, 3, 9, 3);
 	// Part 2/3
-	createPart(leftArm,"box", 0, -3, -4.5, 0xff0000, false, 3, 3, 6);
+	createPart(leftArm,"box", 0, -3, -4.5, 0xb00000, false, 3, 3, 6);
 	// Part 3/3
 	createPart(leftArm,"cylinder", 1, 3.5, 2, 0x5b5b5b, false, 0.5, 10, 0.5);
 
@@ -488,9 +504,9 @@ function createLeftArm(x,  y, z) {
 function createRightArm(x,  y, z) {
 	rightArm = new THREE.Object3D();
 	// Part 1/3
-	createPart(rightArm,"box", 0, 0, 0, 0xff0000, false, 3, 9, 3);
+	createPart(rightArm,"box", 0, 0, 0, 0xb00000, false, 3, 9, 3);
 	// Part 2/3
-	createPart(rightArm,"box", 0, -3, -4.5, 0xff0000, false, 3, 3, 6);
+	createPart(rightArm,"box", 0, -3, -4.5, 0xb00000, false, 3, 3, 6);
 	// Part 3/3
 	createPart(rightArm,"cylinder", -1, 3.5, 2, 0x5b5b5b, false, 0.5, 10, 0.5);
 
@@ -598,7 +614,7 @@ function createRobo() {
 function createTrailer() {
 	trailer = new THREE.Object3D();
 	// Part 1/7
-	createPart(trailer, "box", 0, 0, 0, 0x202020, false, 12, 12, 20);
+	createPart(trailer, "box", 0, 0, 0, 0x808080, false, 12, 12, 20);
 	// Part 2/7
 	createPart(trailer,"cylinder", 5, -8, 7, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
 	// Part 3/7
@@ -608,9 +624,9 @@ function createTrailer() {
 	// Part 5/7
 	createPart(trailer,"cylinder", -5, -8, 1, 0x3c3c3c, false, 2, 2, 2, 0, 0, 90);
 	// Part 6/7
-	createPart(trailer, "box", 0, -7, -9.5, 0x202020, false, 1, 2, 1);
+	createPart(trailer, "box", 0, -7.5, -8.5, 0x000030, false, 2, 3, 2);
 	// Part 7/7
-	createPart(trailer, "box", 0, -7.5, 4, 0x202020, false, 8, 3, 10);
+	createPart(trailer, "box", 0, -7.5, 4, 0x0000ff, false, 8, 3, 10);
 
 	trailer.position.set(20, 7.5, 27);
 	scene.add(trailer);
