@@ -22,6 +22,12 @@ let rotationSpeed = 1.5, armsSpeed = 0.05, trailerSpeed = 0.2;
 let isWireframeOn = false;
 const trailerTargetPosition = new THREE.Vector3(0, 7.5, 27);
 let isTrailerAnimating = false;
+let frustumSize = 35;
+let first_deg = false;
+let second_deg = false;
+let third_deg = false;
+let fourth_deg = false;
+
 
 
 /////////////////////
@@ -40,7 +46,7 @@ function createScene() {
 //////////////////////
 
 function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, looky, lookz) {
-	let frustumSize = 35;
+
 	let left = -frustumSize * aspect / 2;
 	let right = frustumSize * aspect / 2;
 	let top = frustumSize / 2;
@@ -112,43 +118,59 @@ function update() {
 	if(Qkey && !Akey){
 		if (feetUnion.rotation.x > -1.57) {
 			feetUnion.rotation.x -= rotationSpeed * (Math.PI / 180);
+			if (feetUnion.rotation.x < -1.57) {
+				first_deg = true;
+			}
 		}
 	}
 	if(Akey && !Qkey){
 	if (feetUnion.rotation.x < 0) {
 			feetUnion.rotation.x += rotationSpeed * (Math.PI / 180);
+			first_deg = false;
 		}
 	}
 	if(Wkey && !Skey){
 		if (legUnion.rotation.x > -1.57) {
 			legUnion.rotation.x -= rotationSpeed * (Math.PI / 180);
+			if(legUnion.rotation.x < -1.57){
+				second_deg = true;
+			}
 		}
 	}
 	if(Skey && !Wkey){
 		if (legUnion.rotation.x < 0) {
 			legUnion.rotation.x += rotationSpeed * (Math.PI / 180);
+			second_deg = false;
 		}
 	}
 	if(Ekey && !Dkey){
 		if (leftArm.position.x > 4.5) {
 			leftArm.position.x -= armsSpeed;
 			rightArm.position.x += armsSpeed;
+			if(leftArm.position.x < 4.5){
+				third_deg = true;
+			}
 		}
 	}
 	if(Dkey && !Ekey){
 		if (leftArm.position.x < 7.5) {
 			leftArm.position.x += armsSpeed;
 			rightArm.position.x -= armsSpeed;
+			third_deg = false;
 		}
 	}
 	if(Rkey && !Fkey){
 		if (head.rotation.x < 3.14) {
 			head.rotation.x += rotationSpeed * 2 * (Math.PI / 180);
+			if(head.rotation.x < 3.14){
+				fourth_deg = true;
+			}
 		}
 	}
 	if(Fkey && !Rkey){
 		if (head.rotation.x > 0) {
 			head.rotation.x -= rotationSpeed * 2 * (Math.PI / 180);
+			fourth_deg = false;
 		}
 	}
 	
@@ -219,6 +241,11 @@ function animate() {
 function onResize() {
 	
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	let aspect = window.innerWidth / window.innerHeight;
+	let left = -frustumSize * aspect / 2;
+	let right = frustumSize * aspect / 2;
+	let top = frustumSize / 2;
+	let bottom = -frustumSize / 2;
 	if (window.innerHeight > 0 && window.innerWidth > 0) {
 		cameras.forEach((cam) => {	
 			if (cam.isPerspectiveCamera) {
@@ -226,14 +253,16 @@ function onResize() {
 				cam.updateProjectionMatrix();
 			}
 			else if (cam.isOrthographicCamera) {
-				cam.left = -window.innerWidth / window.innerHeight * 2;
-				cam.right = window.innerWidth / window.innerHeight * 2;
-				cam.top = 2;
-				cam.bottom = -2;
+				cam.left = left;
+				cam.right = right;
+				cam.top = top;
+				cam.bottom = bottom;
 				cam.updateProjectionMatrix();
 			}
 		});
 	}
+	console.log(isTruck() + " " + first_deg + " " + second_deg + " " + third_deg + " " + fourth_deg);
+
 	render();
 
 }
@@ -620,6 +649,14 @@ function enableFreeCamera() {
 	controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 	controls.dampingFactor = 0.05;
 	controls.autoRotate = false;
+}
+function isTruck() {
+	if (first_deg && second_deg && third_deg && fourth_deg) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 init();
