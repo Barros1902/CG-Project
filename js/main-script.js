@@ -45,12 +45,12 @@ function createScene() {
 /* CREATE CAMERA(S) */
 //////////////////////
 
-function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, looky, lookz) {
+function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, looky, lookz, customFrustumSize = frustumSize) {
 
-	let left = -frustumSize * aspect / 2;
-	let right = frustumSize * aspect / 2;
-	let top = frustumSize / 2;
-	let bottom = -frustumSize / 2;
+	let left = -customFrustumSize * aspect / 2;
+	let right = customFrustumSize * aspect / 2;
+	let top = customFrustumSize / 2;
+	let bottom = -customFrustumSize / 2;
 	if (type == "perspective") {
 		camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 		camera.position.set(posx, posy, posz);
@@ -59,6 +59,7 @@ function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, loo
 		camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
 		camera.position.set(posx, posy, posz);
 		camera.lookAt(lookx, looky, lookz);
+		camera.originalFrustumSize = customFrustumSize;
 	} else {
 		console.error("Invalid camera type specified. Use 'perspective' or 'orthographic'.");
 		return;
@@ -74,7 +75,7 @@ function createCameras() {
 
 	ort_frontal = createCamera("orthographic", 90, window.innerWidth / window.innerHeight, 1, 1000, 0, 0, -50, 0, 0, 0);
 	ort_lateral = createCamera("orthographic", 90, window.innerWidth / window.innerHeight, 1, 1000, 100, 0, 0, 0, 0, 0);
-	ort_topo = createCamera("orthographic", 90, window.innerWidth / window.innerHeight, 1, 1000, 0, 100, 0, 0, 0, 0);
+	ort_topo = createCamera("orthographic", 90, window.innerWidth / window.innerHeight, 1, 1000, 0, 100, 0, 0, 0, 0, 80);
 	perspective = createCamera("perspective", 70, window.innerWidth / window.innerHeight, 1, 1000, -20, 20, -20, 0, 0, 0);
 	moving = createCamera("perspective", 70, window.innerWidth / window.innerHeight, 1, 1000, 10, 20, 20, 0, 0, 0);
 
@@ -202,7 +203,7 @@ function update() {
 	if(Rkey && !Fkey){
 		if (head.rotation.x < 3.14) {
 			head.rotation.x += rotationSpeed * 2 * (Math.PI / 180);
-			if(head.rotation.x < 3.14){
+			if(head.rotation.x > 3.14){
 				fourth_deg = true;
 			}
 		}
@@ -284,21 +285,18 @@ function onResize() {
 	
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	let aspect = window.innerWidth / window.innerHeight;
-	let left = -frustumSize * aspect / 2;
-	let right = frustumSize * aspect / 2;
-	let top = frustumSize / 2;
-	let bottom = -frustumSize / 2;
+
 	if (window.innerHeight > 0 && window.innerWidth > 0) {
 		cameras.forEach((cam) => {	
 			if (cam.isPerspectiveCamera) {
-				cam.aspect = window.innerWidth / window.innerHeight;
+				cam.aspect = aspect;
 				cam.updateProjectionMatrix();
 			}
 			else if (cam.isOrthographicCamera) {
-				cam.left = left;
-				cam.right = right;
-				cam.top = top;
-				cam.bottom = bottom;
+				cam.left = -cam.originalFrustumSize * aspect / 2;
+				cam.right = cam.originalFrustumSize * aspect / 2;
+				cam.top = cam.originalFrustumSize / 2;
+				cam.bottom = -cam.originalFrustumSize / 2;
 				cam.updateProjectionMatrix();
 			}
 		});
@@ -689,10 +687,13 @@ function enableFreeCamera() {
 	controls.autoRotate = false;
 }
 function isTruck() {
+	
 	if (first_deg && second_deg && third_deg && fourth_deg) {
+		console.log("True")
 		return true;
 	}
 	else {
+		console.log("False")
 		return false;
 	}
 }
