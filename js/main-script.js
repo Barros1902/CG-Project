@@ -261,8 +261,6 @@ function onResize() {
 			}
 		});
 	}
-	console.log(isTruck() + " " + first_deg + " " + second_deg + " " + third_deg + " " + fourth_deg);
-
 	render();
 
 }
