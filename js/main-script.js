@@ -93,14 +93,36 @@ function createCameras() {
 /* CHECK COLLISIONS */
 //////////////////////
 function checkCollisions() {
-    const trailerBox = new THREE.Box3().setFromObject(trailer);
-    const robotBox = new THREE.Box3().setFromObject(torso); // TODO: check if torso is the correct object to use
+    const robotCenter = torso.position.clone();
+    const trailerCenter = trailer.position.clone();
+	const robotSize = new THREE.Vector3(12, 12, 20);
+	const trailerSize = new THREE.Vector3(12, 12, 20);
+    const robotAABB = getAABB(robotCenter, robotSize);
+    const trailerAABB = getAABB(trailerCenter, trailerSize);
 
+    if (aabbIntersects(robotAABB, trailerAABB) && isTruck()) {
 
-    if (trailerBox.intersectsBox(robotBox)) {
         handleCollisions();
     }
 }
+
+function getAABB(center, size) {
+    const half = size.clone().multiplyScalar(0.5);
+    return {
+        min: center.clone().sub(half),
+        max: center.clone().add(half),
+    };
+}
+
+function aabbIntersects(a, b) {
+    return (
+        a.min.x <= b.max.x && a.max.x >= b.min.x &&
+        a.min.y <= b.max.y && a.max.y >= b.min.y &&
+        a.min.z <= b.max.z && a.max.z >= b.min.z
+    );
+}
+
+
 
 ///////////////////////
 /* HANDLE COLLISIONS */
@@ -110,6 +132,9 @@ function handleCollisions() {
         isTrailerAnimating = true;
     }
 }
+
+
+
 
 ////////////
 /* UPDATE */
@@ -175,6 +200,7 @@ function update() {
 	}
 	
 	checkCollisions();
+	
 	if (isTrailerAnimating) {
 		trailer.position.lerp(trailerTargetPosition, 0.05);
 		if (trailer.position.distanceTo(trailerTargetPosition) < 0.05) {
@@ -586,7 +612,7 @@ function createTrailer() {
 	// Part 7/7
 	createPart(trailer, "box", 0, -7.5, 4, 0x202020, false, 8, 3, 10);
 
-	trailer.position.set(10, 7.5, 27);
+	trailer.position.set(20, 7.5, 27);
 	scene.add(trailer);
 }
 
