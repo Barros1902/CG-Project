@@ -243,12 +243,13 @@ function generateTextures(type) {
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 			const flowerColors = [white, yellow, lilac, light_blue];
-			for (let i = 0; i < 500; i++) {
+			for (let i = 0; i < 5000; i++) {
 				const x = Math.random() * canvas.width;
 				const y = Math.random() * canvas.height;
-				const r = Math.random() * 0.1 + 0.05; // Random radius between 0.05 and 0.15
-				const flowerColor = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+				const r = Math.random() * 1 + 0.5; // Random radius between 0.05 and 0.15
+				const flowerColor = flowerColors[Math.floor(Math.random() * (flowerColors.length +1 ) % flowerColors.length)];
 				ctx.fillStyle = flowerColor.getStyle();
+				ctx.beginPath();
 				ctx.arc(x, y, r, 0, Math.PI * 2);
 				ctx.fill();
 			}
