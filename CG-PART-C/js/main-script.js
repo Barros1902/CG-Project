@@ -11,6 +11,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/
 const CAMPO = 0, CEU = 1;
 let scene, camera, cameras = [], activeCamera, moving, renderer, controls;
 let frustumSize = 35;
+let lightEnabled = true, directionalLight;
 let currentTextureType = CAMPO; 
 let white = new THREE.Color(0xffffff), 
 	yellow = new THREE.Color(0xffff00),
@@ -21,7 +22,7 @@ let white = new THREE.Color(0xffffff),
 	dark_violet = new THREE.Color(0x9400D3),
 	orangy_brown = new THREE.Color(0x994f0b),
 	dark_green = new THREE.Color(0x045700);
-let terrain, skydome;
+let terrain, skydome, moon;
 let trees = [];
 let materials = [];
 
@@ -74,6 +75,23 @@ function createCameras() {
 /* CREATE LIGHT(S) */
 /////////////////////
 
+function createLights(){
+
+	const moonLight = new THREE.PointLight(0xffffff, 1000); // cor, intensidade
+	moonLight.position.copy(moon.position);
+	//scene.add(moonLight);
+
+	directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // cor, intensidade
+	directionalLight.position.set(30, 50, 30); // Posição da luz
+	directionalLight.castShadow = true; // Ativa a sombra
+	scene.add(directionalLight);
+
+	// (opcional) visualizar direção da luz
+	// const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
+	// scene.add(helper);
+
+}
+
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
@@ -81,10 +99,26 @@ function createCameras() {
 function createObjects() {
 	createTerrain();
 	generateTrees();
+	createMoon();
+}
+
+function createMoon() {
+	const moonGeometry = createSphere(5, 100, 100);
+	const moonMaterial = new THREE.MeshStandardMaterial({
+		color: 0xffffff,             	// Cor base
+		emissive: 0xffffff,          	// Cor da luz emitida
+		emissiveIntensity: 1.5,       	// Intensidade do brilho
+		roughness: 0.5,               	// Um pouco rugosa para realismo
+		metalness: 0.1                 	// Pouco metálica
+	});
+	moon = new THREE.Mesh(moonGeometry, moonMaterial);
+	moon.position.set(30, 50, -50); // Posição da lua
+	scene.add(moon);
+
 }
 
 function createTerrain() {
-	
+
 	const loader = new THREE.TextureLoader();
 	loader.load('js/heightmap3.png', (heightMapTexture) => {
   		const geometry = new THREE.PlaneGeometry(100, 100, 700, 700);
@@ -172,12 +206,7 @@ function init() {
 	createCameras();
 	enableFreeCamera();
 	createObjects();
-	//TODO This are just test lights, remove them later
-	const light = new THREE.DirectionalLight(0xffffff, 1);
-	light.position.set(30, 50, 30);
-	scene.add(light);
-	const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
-	scene.add(ambientLight);
+	createLights();
 	render();
 	window.addEventListener("resize", onResize);
 	window.addEventListener("keydown", onKeyDown);
@@ -235,6 +264,12 @@ function onKeyDown(e) {
 			currentTextureType = CEU;
 			skydome.material.map = generateTextures(CEU);
 			skydome.material.needsUpdate = true;
+			break;
+		case "D":
+		case "d":
+			lightEnabled = !lightEnabled;
+			directionalLight.visible = lightEnabled;
+			console.log(`Luz Direcional ${lightEnabled ? 'ligada' : 'desligada'}`);
 			break;
 	}
 }
