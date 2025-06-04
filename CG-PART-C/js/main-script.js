@@ -1,7 +1,6 @@
 import * as THREE from "three";
-import { OrbitControls } from 'https://unpkg.com/three@0.160.1/examples/jsm/controls/OrbitControls.js';;/*
-
-/*import { VRButton } from "three/addons/webxr/VRButton.js";
+import { OrbitControls } from 'https://unpkg.com/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+import { VRButton } from 'https://unpkg.com/three@0.160.1/examples/jsm/webxr/VRButton.js';/*
 import * as Stats from "three/addons/libs/stats.module.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/
 
@@ -10,7 +9,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/
 //////////////////////
 const CAMPO = 0, CEU = 1;
 const LAMBERT = 0, PHONG = 1, TOON = 2, BASIC = 3;
-let scene, camera, cameras = [], activeCamera, moving, perspective, renderer, controls;
+let scene, camera, cameras = [], activeCamera, moving, perspective, stereo, renderer, controls;
 let frustumSize = 35;
 let lightEnabled = true, directionalLight;
 let currentTextureType = CAMPO; 
@@ -55,6 +54,10 @@ function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, loo
 		camera.position.set(posx, posy, posz);
 		camera.lookAt(lookx, looky, lookz);
 		camera.originalFrustumSize = customFrustumSize;
+	} else if (type == "stereo") {
+		camera = new THREE.StereoCamera();
+		camera.eyeSep = 0.064;
+		return camera;
 	} else {
 		console.error("Invalid camera type specified. Use 'perspective' or 'orthographic'.");
 		return;
@@ -70,6 +73,7 @@ function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, loo
 function createCameras() {
 	perspective = createCamera("perspective", 60, window.innerWidth / window.innerHeight, 0.1, 1000, -60, 40, 40, 20, 20, 0);
 	moving = createCamera("perspective", 70, window.innerWidth / window.innerHeight, 1, 1000, 10, 20, 20, 0, 0, 0);
+	stereo = createCamera("stereo", 60, window.innerWidth / window.innerHeight, 0.1, 1000, -60, 40, 40, 20, 20, 0);
 
 	activeCamera = moving; // Set the active camera to the first one created
 }
@@ -193,7 +197,13 @@ function update() {}
 /////////////
 function render() {
 
-	renderer.render(scene, activeCamera);
+	if (activeCamera === stereo) {
+		stereo.update(moving);
+		renderer.render(scene, stereo.cameraL);
+		renderer.render(scene, stereo.cameraR);
+	} else {
+    	renderer.render(scene, activeCamera);
+}
 }
 
 ////////////////////////////////
@@ -204,6 +214,8 @@ function init() {
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
+	renderer.xr.enabled = true;
+	document.body.appendChild(VRButton.createButton(renderer));
 
 	createScene();
 	createCameras();
@@ -220,9 +232,9 @@ function init() {
 /* ANIMATION CYCLE */
 /////////////////////
 function animate() {
-
-	requestAnimationFrame(animate);
-	render();
+    renderer.setAnimationLoop(() => {
+        render();
+    });
 }
 
 ////////////////////////////
