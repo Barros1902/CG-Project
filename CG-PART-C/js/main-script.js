@@ -9,7 +9,8 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/
 /* GLOBAL VARIABLES */
 //////////////////////
 const CAMPO = 0, CEU = 1;
-let scene, camera, cameras = [], activeCamera, moving, renderer, controls;
+const LAMBERT = 0, PHONG = 1, TOON = 2, BASIC = 3;
+let scene, camera, cameras = [], activeCamera, moving, perspective, renderer, controls;
 let frustumSize = 35;
 let lightEnabled = true, directionalLight;
 let currentTextureType = CAMPO; 
@@ -25,6 +26,8 @@ let white = new THREE.Color(0xffffff),
 let terrain, skydome, moon;
 let trees = [];
 let materials = [];
+let currentMaterialType = LAMBERT, basicOn = false;
+let meshs = [];
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -65,7 +68,7 @@ function createCamera(type, fov, aspect, near, far, posx, posy, posz, lookx, loo
 }
 
 function createCameras() {
-	createCamera("perspective", 60, window.innerWidth / window.innerHeight, 0.1, 1000, 0, 20, 50, 0, 0, 0);
+	perspective = createCamera("perspective", 60, window.innerWidth / window.innerHeight, 0.1, 1000, -60, 40, 40, 20, 20, 0);
 	moving = createCamera("perspective", 70, window.innerWidth / window.innerHeight, 1, 1000, 10, 20, 20, 0, 0, 0);
 
 	activeCamera = moving; // Set the active camera to the first one created
@@ -271,6 +274,46 @@ function onKeyDown(e) {
 			directionalLight.visible = lightEnabled;
 			console.log(`Luz Direcional ${lightEnabled ? 'ligada' : 'desligada'}`);
 			break;
+		case "Q":
+		case "q":
+			currentMaterialType = LAMBERT;
+			if (!basicOn){
+				switchMaterials(LAMBERT);
+			}
+			break;
+		case "W":
+		case "w":
+			currentMaterialType = PHONG;
+			if (!basicOn){
+				switchMaterials(PHONG);
+			}
+			break;
+		case "E":
+		case "e":
+			currentMaterialType = TOON;
+			if (!basicOn){
+				switchMaterials(TOON);
+			}
+			break;
+		case "R":
+		case "r":
+			if (!basicOn){
+				basicOn = true;
+				switchMaterials(BASIC);
+			}
+			else{
+				basicOn = false;
+				switchMaterials(currentMaterialType);
+			}
+			break;
+		case "7":
+			if (activeCamera != perspective){
+				activeCamera = perspective
+			}
+			else {
+				activeCamera = moving
+			}
+			break;
 	}
 }
 
@@ -379,7 +422,7 @@ function createTree(x, y, z, trunk, leafs, scale = 1, rot = 0){
 /* GENERATE OBJECTS */
 ///////////////////////
 
-function createPart(obj, shape, material, xpos = 0, ypos = 0, zpos = 0, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
+function createPart(obj, shape, materialId, xpos = 0, ypos = 0, zpos = 0, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
 	let geometry;
 
     switch (shape.toLowerCase()) {
@@ -395,10 +438,11 @@ function createPart(obj, shape, material, xpos = 0, ypos = 0, zpos = 0, xsize = 
             return;
     }
 
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, materials[materialId][currentMaterialType]);
     mesh.position.set(xpos, ypos, zpos);
 	mesh.rotation.set(xrot * (Math.PI / 180), yrot * (Math.PI / 180), zrot * (Math.PI / 180));
     obj.add(mesh);
+	meshs.push([mesh, materialId]);
 
 	return mesh;
 
@@ -515,9 +559,22 @@ function createSphere(radius = 1, widthSegments = 32, heightSegments = 16) {
 }
 
 function createMaterial(color = 0xFF0000, wireframe = false) {
-	const material = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe});
-	materials.push(material);
-	return material;
+	const lambertMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: wireframe, flatShading: true });
+	const phongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: wireframe});
+	const toontMaterial = new THREE.MeshToonMaterial({ color: color, wireframe: wireframe});
+	const basicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe});
+	let index = materials.push([lambertMaterial, phongMaterial, toontMaterial, basicMaterial]);
+	return index - 1;
+}
+
+///////////////////////
+/* SWITCH MATERIALS */
+///////////////////////
+
+function switchMaterials(id){
+	meshs.forEach(([mesh, material]) => {
+		mesh.material = materials[material][id]
+	});
 }
 
 ///////////////////////
