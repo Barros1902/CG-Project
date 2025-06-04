@@ -312,7 +312,7 @@ function generateTrees(){
 	});
 }
 
-function createTree(x, y, z, trunk, leafs, scale = 1){
+function createTree(x, y, z, trunk, leafs, scale = 1, rot = 0){
 	let tree = new THREE.Object3D();
 
 	// Tronco
@@ -336,6 +336,7 @@ function createTree(x, y, z, trunk, leafs, scale = 1){
 
 	tree.position.set(x, y, z);
 	tree.scale.set(scale, scale, scale);
+	tree.rotation.set(0, rot * (Math.PI / 180), 0);
 	trees.push(tree);
 }
 
