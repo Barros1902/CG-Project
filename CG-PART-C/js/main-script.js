@@ -79,44 +79,56 @@ function createObjects() {
 }
 
 function createTerrain() {
+	
 	const loader = new THREE.TextureLoader();
-	loader.load('js/heightmap.jpeg', (heightMapTexture) => {
-		const geometry = new THREE.PlaneGeometry(100, 100, 199, 199);
-		const heightMapImage = heightMapTexture.image;
+	loader.load('js/heightmap3.png', (heightMapTexture) => {
+  		const geometry = new THREE.PlaneGeometry(100, 100, 700, 700);
+  		const material = new THREE.MeshPhongMaterial({ map: generateTextures(CAMPO) });
+  		terrain = new THREE.Mesh(geometry, material);
+  		terrain.rotation.x = -Math.PI / 2;
 
+  		const heightMapImage = heightMapTexture.image;
+
+		// Espera até a imagem estar completamente carregada
 		const canvas = document.createElement("canvas");
 		canvas.width = heightMapImage.width;
 		canvas.height = heightMapImage.height;
 		const ctx = canvas.getContext("2d");
-		ctx.drawImage(heightMapImage, 0, 0);
-		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
-		for( let i = 0; i < geometry.attributes.position.count; i++) {
-			const x = i % canvas.width;
-			const y = Math.floor(i / canvas.width);
-			const pixelIndex = (y * canvas.width + x) * 4; // RGBA
-			const height = imageData[pixelIndex] / 255; // Scale height to a reasonable value
-			geometry.attributes.position.setZ(i, height * 10);
+		// Importante: pode ser necessário esperar o onload para garantir que a imagem está acessível
+		heightMapImage.onload = () => {
+		ctx.drawImage(heightMapImage, 0, 0);
+		const imageData = ctx.getImageData(0, 0, heightMapImage.width, heightMapImage.height).data;
+		const vertices = geometry.attributes.position;
+		const width = geometry.parameters.widthSegments + 1;
+		const height = geometry.parameters.heightSegments + 1;
+
+		for (let i = 0; i < vertices.count; i++) {
+			const ix = i % width;
+			const iy = Math.floor(i / width);
+			const xImg = Math.floor(ix / width * heightMapImage.width);
+			const yImg = Math.floor(iy / height * heightMapImage.height);
+			const pixelIndex = (yImg * heightMapImage.width + xImg) * 4;
+			const heightValue = imageData[pixelIndex] / 255 * 70; // altura normalizada
+			vertices.setZ(i, heightValue);
 		}
 
+		vertices.needsUpdate = true;
 		geometry.computeVertexNormals();
-
-		const terrainMaterial = new THREE.MeshStandardMaterial({
-			map: generateTextures(CAMPO),
-			flatShading: true,
-		});
-
-		terrain = new THREE.Mesh(geometry, terrainMaterial);
-		terrain.rotation.x = -Math.PI / 2; // Rotate to make it horizontal
-		scene.add(terrain);
-		const skyGEO = new THREE.SphereGeometry(500, 32, 32);
-		const skyMaterial = new THREE.MeshBasicMaterial({
-			map: generateTextures(CEU),
-			side: THREE.BackSide // Render the inside of the sphere
-		});
-		skydome = new THREE.Mesh(skyGEO, skyMaterial);
-		scene.add(skydome);
+		};
+  	// ou força o onload manualmente se já estiver carregada
+  	if (heightMapImage.complete) heightMapImage.onload();
+  	scene.add(terrain);
 	});
+
+	const skyGEO = new THREE.SphereGeometry(500, 32, 32);
+	const skyMaterial = new THREE.MeshBasicMaterial({
+		map: generateTextures(CEU),
+		side: THREE.BackSide // Render the inside of the sphere
+	});
+	skydome = new THREE.Mesh(skyGEO, skyMaterial);
+	scene.add(skydome);
+	
 }
 
 //////////////////////
@@ -232,8 +244,8 @@ function onKeyUp(e) {}
 ///////////////////////
 function generateTextures(type) {
 	const canvas = document.createElement("canvas");
-	canvas.width = 512;
-	canvas.height = 512;
+	canvas.width = 4096;
+	canvas.height = 4096;
 	const ctx = canvas.getContext("2d");
 	switch (type) {
 		case CAMPO:
@@ -246,7 +258,7 @@ function generateTextures(type) {
 			for (let i = 0; i < 5000; i++) {
 				const x = Math.random() * canvas.width;
 				const y = Math.random() * canvas.height;
-				const r = Math.random() * 1 + 0.5; // Random radius between 0.05 and 0.15
+				const r = Math.random() * 10 + 5; // Random radius between 0.5 and 1.5
 				const flowerColor = flowerColors[Math.floor(Math.random() * (flowerColors.length +1 ) % flowerColors.length)];
 				ctx.fillStyle = flowerColor.getStyle();
 				ctx.beginPath();
@@ -266,7 +278,7 @@ function generateTextures(type) {
 			for (let i = 0; i < 5000; i++) {
 				const x = Math.random() * canvas.width;
 				const y = Math.random() * canvas.height;
-				const r = Math.random() * 0.1 + 0.05; // Random radius between 0.05 and 0.15
+				const r = Math.random() * 1 + 0.5; // Random radius between 0.5 and 1.5
 				const starColor = white.getStyle();
 				ctx.fillStyle = starColor;
 				ctx.beginPath();
