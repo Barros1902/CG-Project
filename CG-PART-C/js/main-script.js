@@ -18,8 +18,12 @@ let white = new THREE.Color(0xffffff),
 	light_blue = new THREE.Color(0xADD8E6),
 	light_green = new THREE.Color(0x90EE90),
 	dark_blue = new THREE.Color(0x00008B),
-	dark_violet = new THREE.Color(0x9400D3);
+	dark_violet = new THREE.Color(0x9400D3),
+	orangy_brown = new THREE.Color(0x994f0b),
+	dark_green = new THREE.Color(0x045700);
 let terrain, skydome;
+let trees = [];
+let materials = [];
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -76,6 +80,7 @@ function createCameras() {
 
 function createObjects() {
 	createTerrain();
+	generateTrees();
 }
 
 function createTerrain() {
@@ -290,6 +295,198 @@ function generateTextures(type) {
 	}
 	return new THREE.CanvasTexture(canvas);
 }
+
+///////////////////////
+/* GENERATE TREE */
+///////////////////////
+
+function generateTrees(){
+
+	let trunk = createMaterial(orangy_brown);
+	let leafs = createMaterial(dark_green);
+
+	createTree(0, 0, 0, trunk, leafs, 1);
+
+	trees.forEach((tree) => {
+		scene.add(tree)
+	});
+}
+
+function createTree(x, y, z, trunk, leafs, scale = 1){
+	let tree = new THREE.Object3D();
+
+	// Tronco
+	createPart(tree,"cylinder", trunk, 0, 3, 0, 1, 6, 1);
+	// Tronco encortiçado
+	createPart(tree,"cylinder", trunk, 0, 7.5, 0, 1.5, 3, 1.5);
+	// Ramo esquerdo
+	createPart(tree,"cylinder", trunk, -2, 11, -1, 0.5, 6, 0.5, -30, 0, 45);
+	// Copa esquerda
+	createPart(tree,"sphere", leafs, -4, 13, -2, 2, 2, 2);
+	//Ramo direito
+	createPart(tree,"cylinder", trunk, 1.5, 10.5, 0.75, 1, Math.sqrt(20), 1, 30, 0, -45);
+	//Ramo direito frente
+	createPart(tree,"cylinder", trunk, 1.5, 15, 3.75, 0.5, 8, 0.5, 40, 0, 20);
+	//Copa direita frente
+	createPart(tree,"sphere", leafs, 0, 18, 6, 3, 3, 3);
+	//Ramo diretio trás
+	createPart(tree,"cylinder", trunk, 6, 13.5, -0.75, 0.5, 8, 0.5, -60, 0, -50);
+	//Copa direita trás
+	createPart(tree,"sphere", leafs, 9, 15, -3, 3, 3, 3);
+
+	tree.position.set(x, y, z);
+	tree.scale.set(scale, scale, scale);
+	trees.push(tree);
+}
+
+///////////////////////
+/* GENERATE OBJECTS */
+///////////////////////
+
+function createPart(obj, shape, material, xpos = 0, ypos = 0, zpos = 0, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
+	let geometry;
+
+    switch (shape.toLowerCase()) {
+        case "sphere":
+            geometry = createSphere(xsize, 100, 100);
+            break;
+		case "cylinder":
+			geometry = createCylinder(xsize, ysize, zsize, 100);
+			//geometry = new THREE.CylinderGeometry(xsize, xsize, ysize, 100);
+			break;
+        default:
+            console.error("Shape not recognized:", shape);
+            return;
+    }
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(xpos, ypos, zpos);
+	mesh.rotation.set(xrot * (Math.PI / 180), yrot * (Math.PI / 180), zrot * (Math.PI / 180));
+    obj.add(mesh);
+
+	return mesh;
+
+}
+
+function createCylinder(xsize = 1, height = 2, zsize = 1, radialSegments = 32) {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const indices = [];
+
+    // Top and bottom center points
+    const halfHeight = height / 2;
+    const topCenter = [0, halfHeight, 0];
+    const bottomCenter = [0, -halfHeight, 0];
+
+    // Arrays to store the top and bottom circle vertices
+    const topVertices = [];
+    const bottomVertices = [];
+
+    // Generate circle vertices
+    for (let i = 0; i < radialSegments; i++) {
+        const theta = (i / radialSegments) * Math.PI * 2;
+        const x = Math.cos(theta) * xsize;
+        const z = Math.sin(theta) * zsize;
+        topVertices.push([x, halfHeight, z]);
+        bottomVertices.push([x, -halfHeight, z]);
+    }
+
+    // Add top and bottom center
+    positions.push(...topCenter);
+    positions.push(...bottomCenter);
+
+    // Add top and bottom circle vertices to positions
+    topVertices.forEach(v => positions.push(...v));
+    bottomVertices.forEach(v => positions.push(...v));
+
+    // Indices for top face
+    for (let i = 0; i < radialSegments; i++) {
+        const next = (i + 1) % radialSegments;
+        indices.push(
+            0, // top center
+            2 + next,
+            2 + i
+        );
+    }
+
+    // Indices for bottom face
+    for (let i = 0; i < radialSegments; i++) {
+        const next = (i + 1) % radialSegments;
+        indices.push(
+            1, // bottom center
+            2 + radialSegments + i,
+            2 + radialSegments + next
+        );
+    }
+
+    // Indices for side faces
+    for (let i = 0; i < radialSegments; i++) {
+        const next = (i + 1) % radialSegments;
+        const topA = 2 + i;
+        const topB = 2 + next;
+        const bottomA = 2 + radialSegments + i;
+        const bottomB = 2 + radialSegments + next;
+
+        // First triangle
+        indices.push(topA, bottomB, bottomA);
+        // Second triangle
+        indices.push(topB, bottomB, topA);
+    }
+
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+
+    return geometry;
+}
+
+function createSphere(radius = 1, widthSegments = 32, heightSegments = 16) {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const indices = [];
+
+    for (let y = 0; y <= heightSegments; y++) {
+        const v = y / heightSegments;
+        const phi = v * Math.PI;
+
+        for (let x = 0; x <= widthSegments; x++) {
+            const u = x / widthSegments;
+            const theta = u * Math.PI * 2;
+
+            const px = -radius * Math.cos(theta) * Math.sin(phi);
+            const py =  radius * Math.cos(phi);
+            const pz =  radius * Math.sin(theta) * Math.sin(phi);
+
+            positions.push(px, py, pz);
+        }
+    }
+
+    for (let y = 0; y < heightSegments; y++) {
+        for (let x = 0; x < widthSegments; x++) {
+            const a = y * (widthSegments + 1) + x;
+            const b = a + widthSegments + 1;
+
+            indices.push(a, b, a + 1);
+            indices.push(b, b + 1, a + 1);
+        }
+    }
+
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+
+    return geometry;
+}
+
+function createMaterial(color = 0xFF0000, wireframe = false) {
+	const material = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe});
+	materials.push(material);
+	return material;
+}
+
+///////////////////////
+/* OTHER */
+///////////////////////
 
 function enableFreeCamera() {
 	controls = new OrbitControls(moving, renderer.domElement);
