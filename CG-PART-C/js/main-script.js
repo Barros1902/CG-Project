@@ -77,11 +77,11 @@ function createCameras() {
 
 function createLights(){
 
-	const moonLight = new THREE.PointLight(0xffffff, 1000); // cor, intensidade
+	const moonLight = new THREE.PointLight(white, 1000); // cor, intensidade
 	moonLight.position.copy(moon.position);
 	//scene.add(moonLight);
 
-	directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // cor, intensidade
+	directionalLight = new THREE.DirectionalLight(white, 0.5); // cor, intensidade
 	directionalLight.position.set(30, 50, 30); // Posição da luz
 	directionalLight.castShadow = true; // Ativa a sombra
 	scene.add(directionalLight);
@@ -105,8 +105,8 @@ function createObjects() {
 function createMoon() {
 	const moonGeometry = createSphere(5, 100, 100);
 	const moonMaterial = new THREE.MeshStandardMaterial({
-		color: 0xffffff,             	// Cor base
-		emissive: 0xffffff,          	// Cor da luz emitida
+		color: white,             	// Cor base
+		emissive: 0x000000,          	// Cor da luz emitida
 		emissiveIntensity: 1.5,       	// Intensidade do brilho
 		roughness: 0.5,               	// Um pouco rugosa para realismo
 		metalness: 0.1                 	// Pouco metálica
