@@ -18,8 +18,12 @@ let white = new THREE.Color(0xffffff),
 	light_blue = new THREE.Color(0xADD8E6),
 	light_green = new THREE.Color(0x90EE90),
 	dark_blue = new THREE.Color(0x00008B),
-	dark_violet = new THREE.Color(0x9400D3);
+	dark_violet = new THREE.Color(0x9400D3),
+	orangy_brown = new THREE.Color(0x994f0b),
+	dark_green = new THREE.Color(0x045700);
 let terrain, skydome;
+let trees = [];
+let materials = [];
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -76,6 +80,7 @@ function createCameras() {
 
 function createObjects() {
 	createTerrain();
+	generateTrees();
 }
 
 function createTerrain() {
@@ -278,6 +283,93 @@ function generateTextures(type) {
 	}
 	return new THREE.CanvasTexture(canvas);
 }
+
+///////////////////////
+/* GENERATE TREE */
+///////////////////////
+
+function generateTrees(){
+
+	let trunk = createMaterial(orangy_brown);
+	let leafs = createMaterial(dark_green);
+
+	createTree(0, 0, 0, trunk, leafs, 1);
+
+	trees.forEach((tree) => {
+		scene.add(tree)
+	});
+}
+
+function createTree(x, y, z, trunk, leafs, scale = 1){
+	let tree = new THREE.Object3D();
+
+	// Tronco
+	createPart(tree,"cylinder", trunk, 0, 3, 0, 1, 6, 1);
+	// Tronco encortiçado
+	createPart(tree,"cylinder", trunk, 0, 7.5, 0, 1.5, 3, 1.5);
+	// Ramo esquerdo
+	createPart(tree,"cylinder", trunk, -2, 11, -1, 0.5, 6, 0.5, -30, 0, 45);
+	// Copa esquerda
+	createPart(tree,"sphere", leafs, -4, 13, -2, 2, 2, 2);
+	//Ramo direito
+	createPart(tree,"cylinder", trunk, 1.5, 10.5, 0.75, 1, Math.sqrt(20), 1, 30, 0, -45);
+	//Ramo direito frente
+	createPart(tree,"cylinder", trunk, 1.5, 15, 3.75, 0.5, 8, 0.5, 40, 0, 20);
+	//Copa direita frente
+	createPart(tree,"sphere", leafs, 0, 18, 6, 3, 3, 3);
+	//Ramo diretio trás
+	createPart(tree,"cylinder", trunk, 6, 13.5, -0.75, 0.5, 8, 0.5, -60, 0, -50);
+	//Copa direita trás
+	createPart(tree,"sphere", leafs, 9, 15, -3, 3, 3, 3);
+
+	tree.position.set(x, y, z);
+	tree.scale.set(scale, scale, scale);
+	trees.push(tree);
+}
+
+///////////////////////
+/* GENERATE OBJECTS */
+///////////////////////
+
+function createPart(obj, shape, material, xpos = 0, ypos = 0, zpos = 0, xsize = 1, ysize = 1, zsize = 1, xrot = 0, yrot = 0, zrot = 0) {
+	let geometry;
+
+    switch (shape.toLowerCase()) {
+        case "box":
+            geometry = new THREE.BoxGeometry(xsize, ysize, zsize);
+            break;
+        case "sphere":
+            geometry = new THREE.SphereGeometry(xsize, 100, 100);
+            break;
+		case "cylinder":
+			geometry = new THREE.CylinderGeometry(xsize, xsize, ysize, 100);
+			break;
+		case "cone":
+			geometry = new THREE.ConeGeometry(xsize, ysize, 100);
+			break;
+        default:
+            console.error("Shape not recognized:", shape);
+            return;
+    }
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(xpos, ypos, zpos);
+	mesh.rotation.set(xrot * (Math.PI / 180), yrot * (Math.PI / 180), zrot * (Math.PI / 180));
+    obj.add(mesh);
+
+	return mesh;
+
+}
+
+function createMaterial(color = 0xFF0000, wireframe = false) {
+	const material = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe });
+	materials.push(material);
+	return material;
+}
+
+///////////////////////
+/* OTHER */
+///////////////////////
 
 function enableFreeCamera() {
 	controls = new OrbitControls(moving, renderer.domElement);
