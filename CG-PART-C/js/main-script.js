@@ -335,17 +335,12 @@ function createPart(obj, shape, material, xpos = 0, ypos = 0, zpos = 0, xsize = 
 	let geometry;
 
     switch (shape.toLowerCase()) {
-        case "box":
-            geometry = new THREE.BoxGeometry(xsize, ysize, zsize);
-            break;
         case "sphere":
-            geometry = new THREE.SphereGeometry(xsize, 100, 100);
+            geometry = createSphere(xsize, 100, 100);
             break;
 		case "cylinder":
-			geometry = new THREE.CylinderGeometry(xsize, xsize, ysize, 100);
-			break;
-		case "cone":
-			geometry = new THREE.ConeGeometry(xsize, ysize, 100);
+			geometry = createCylinder(xsize, ysize, zsize, 100);
+			//geometry = new THREE.CylinderGeometry(xsize, xsize, ysize, 100);
 			break;
         default:
             console.error("Shape not recognized:", shape);
@@ -361,8 +356,118 @@ function createPart(obj, shape, material, xpos = 0, ypos = 0, zpos = 0, xsize = 
 
 }
 
+function createCylinder(xsize = 1, height = 2, zsize = 1, radialSegments = 32) {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const indices = [];
+
+    // Top and bottom center points
+    const halfHeight = height / 2;
+    const topCenter = [0, halfHeight, 0];
+    const bottomCenter = [0, -halfHeight, 0];
+
+    // Arrays to store the top and bottom circle vertices
+    const topVertices = [];
+    const bottomVertices = [];
+
+    // Generate circle vertices
+    for (let i = 0; i < radialSegments; i++) {
+        const theta = (i / radialSegments) * Math.PI * 2;
+        const x = Math.cos(theta) * xsize;
+        const z = Math.sin(theta) * zsize;
+        topVertices.push([x, halfHeight, z]);
+        bottomVertices.push([x, -halfHeight, z]);
+    }
+
+    // Add top and bottom center
+    positions.push(...topCenter);
+    positions.push(...bottomCenter);
+
+    // Add top and bottom circle vertices to positions
+    topVertices.forEach(v => positions.push(...v));
+    bottomVertices.forEach(v => positions.push(...v));
+
+    // Indices for top face
+    for (let i = 0; i < radialSegments; i++) {
+        const next = (i + 1) % radialSegments;
+        indices.push(
+            0, // top center
+            2 + next,
+            2 + i
+        );
+    }
+
+    // Indices for bottom face
+    for (let i = 0; i < radialSegments; i++) {
+        const next = (i + 1) % radialSegments;
+        indices.push(
+            1, // bottom center
+            2 + radialSegments + i,
+            2 + radialSegments + next
+        );
+    }
+
+    // Indices for side faces
+    for (let i = 0; i < radialSegments; i++) {
+        const next = (i + 1) % radialSegments;
+        const topA = 2 + i;
+        const topB = 2 + next;
+        const bottomA = 2 + radialSegments + i;
+        const bottomB = 2 + radialSegments + next;
+
+        // First triangle
+        indices.push(topA, bottomB, bottomA);
+        // Second triangle
+        indices.push(topB, bottomB, topA);
+    }
+
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+
+    return geometry;
+}
+
+function createSphere(radius = 1, widthSegments = 32, heightSegments = 16) {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const indices = [];
+
+    for (let y = 0; y <= heightSegments; y++) {
+        const v = y / heightSegments;
+        const phi = v * Math.PI;
+
+        for (let x = 0; x <= widthSegments; x++) {
+            const u = x / widthSegments;
+            const theta = u * Math.PI * 2;
+
+            const px = -radius * Math.cos(theta) * Math.sin(phi);
+            const py =  radius * Math.cos(phi);
+            const pz =  radius * Math.sin(theta) * Math.sin(phi);
+
+            positions.push(px, py, pz);
+        }
+    }
+
+    for (let y = 0; y < heightSegments; y++) {
+        for (let x = 0; x < widthSegments; x++) {
+            const a = y * (widthSegments + 1) + x;
+            const b = a + widthSegments + 1;
+
+            indices.push(a, b, a + 1);
+            indices.push(b, b + 1, a + 1);
+        }
+    }
+
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+
+    return geometry;
+}
+
 function createMaterial(color = 0xFF0000, wireframe = false) {
-	const material = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe });
+	const material = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe});
 	materials.push(material);
 	return material;
 }
