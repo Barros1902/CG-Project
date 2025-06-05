@@ -107,6 +107,7 @@ function createObjects() {
 	createTerrain();
 	generateTrees();
 	createMoon();
+	generateHouse(20, 20, 20);
 }
 
 function createMoon() {
@@ -386,6 +387,75 @@ function generateTextures(type) {
 	return new THREE.CanvasTexture(canvas);
 }
 
+
+
+
+///////////////////////
+/* GENERATE HOUSE */
+///////////////////////
+
+
+function generateHouse(x, y, z) {	
+	let house = new THREE.Object3D();
+	let wall = createMaterial(white);
+	let window = createMaterial(light_blue);
+	let door = createMaterial(orangy_brown);
+	let roof = createMaterial(orangy_brown);
+
+	// parede frente
+	createPart(house,"face", wall, 2, 0, 0, 26, 12 ,0, 0, 0, 0);
+	// parede direita
+	createPart(house,"face", wall, 0, 0, -13, 15, 12 ,0, 0, 270, 0);
+	// parede esquerda
+	createPart(house,"face", wall, 30, 0, 2, 15, 12 ,0, 0, 90, 0);
+	// parede trás
+	createPart(house,"face", wall, 28, 0, -11, 26, 12 ,0, 0, 180, 0);
+	// suportes saidas
+	createPart(house,"face", wall, 0, 0, 2, 2, 12, 0, 0, 0, 0);
+	createPart(house,"face", wall, 28, 0, 2, 2, 12, 0, 0, 0, 0);
+	createPart(house,"face", wall, 2, 0, -13, 2, 12, 0, 0, 180, 0);
+	createPart(house,"face", wall, 16, 0, -13, 2, 12, 0, 0, 180, 0);
+	createPart(house,"face", wall, 30, 0, -13, 2, 12, 0, 0, 180, 0);
+	// suportes laterais
+	createPart(house,"face", wall, 2, 0, -11, 2, 12, 0, 0, 90, 0);
+	createPart(house,"face", wall, 16, 0, -11, 2, 12, 0, 0, 90, 0);
+	createPart(house,"face", wall, 2, 0, 2, 2, 12, 0, 0, 90, 0);
+	createPart(house,"face", wall, 28, 0, 0, 2, 12, 0, 0, 270, 0);
+	createPart(house,"face", wall, 14, 0,-13, 2, 12, 0, 0, 270, 0);
+	createPart(house,"face", wall, 28, 0,-13, 2, 12, 0, 0, 270, 0);
+	// suporte teto
+	createPart(house,"face", wall, 0, 12, -11, 2, 2, 0, 270, 0, 0);
+	createPart(house,"face", wall, 14, 12, -11, 2, 2, 0, 270, 0, 0);
+	createPart(house,"face", wall, 28, 12, -11, 2, 2, 0, 270, 0, 0);
+	createPart(house,"face", wall, 0, 12, 2, 2, 2, 0, 270, 0, 0);
+	createPart(house,"face", wall, 28, 12, 2, 2, 2, 0, 270, 0, 0);
+	// teto
+	createPart(house,"face", roof, 0, 12, 0, 30, 6.3, 0, 270+28.5, 0, 0);
+	createPart(house,"face", roof, 30, 12, -11, 30, 6.3, 0, 90-28.5, 180, 0);
+	//teto lateral
+	createPart(house,"face", roof, 29.99, 12, -11, 6.3, 4, 0, 180-28.5, 90, 0);
+	createPart(house,"face", roof, 29.99, 12, 0, 4, 6.3, 0, 270+28.5, 90, 0);
+	createPart(house,"face", roof, 0.01, 12, 0, 6.3, 4, 0, 28.5, 270, 180);
+	createPart(house,"face", roof, 0.01, 12, -11, 4, 6.3, 0, 270-28.5, 270, 180);
+
+	//janelas
+	createPart(house,"face", window, 4, 3, 0.01, 5, 5, 0, 0, 0, 0);
+	createPart(house,"face", window, 21, 3, 0.01, 5, 5, 0, 0, 0, 0);
+	createPart(house,"face", window, 25, 3, -11.01, 5, 5, 0, 0, 180, 0);
+	createPart(house,"face", window, 10, 3, -11.01, 5, 5, 0, 0, 180, 0);
+	//porta
+	createPart(house,"face", door, 12.5, 0, 0.01, 5, 8, 0, 0, 0, 0);
+
+
+
+
+	house.position.set(x, y, z);
+	scene.add(house);
+
+}
+
+
+
 ///////////////////////
 /* GENERATE TREE */
 ///////////////////////
@@ -444,6 +514,9 @@ function createPart(obj, shape, materialId, xpos = 0, ypos = 0, zpos = 0, xsize 
 		case "cylinder":
 			geometry = createCylinder(xsize, ysize, zsize, 100);
 			//geometry = new THREE.CylinderGeometry(xsize, xsize, ysize, 100);
+			break;
+		case "face":
+			geometry = createFace(xsize, ysize);
 			break;
         default:
             console.error("Shape not recognized:", shape);
@@ -565,6 +638,33 @@ function createSphere(radius = 1, widthSegments = 32, heightSegments = 16) {
 
     geometry.setIndex(indices);
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+
+    return geometry;
+}
+
+
+function createFace(width, height) {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const indices = [];
+
+    // Define the 4 vertices of the face (rectangle)
+    positions.push(
+        0, 0, 0,       // vertex 0
+        width, 0, 0,   // vertex 1
+        width, height, 0, // vertex 2
+        0, height, 0   // vertex 3
+    );
+
+    // Define triangles using indices
+    indices.push(
+        0, 1, 2, // first triangle
+        0, 2, 3  // second triangle
+    );
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
     geometry.computeVertexNormals();
 
     return geometry;
