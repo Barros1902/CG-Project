@@ -27,7 +27,7 @@ let trees = [];
 let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
-let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 20;
+let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 1, heightScale = 70, heightMapImage, canvas, imageData;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -106,7 +106,6 @@ function createLights(){
 
 function createObjects() {
 	createTerrain();
-	generateTrees(nOfTrees);
 	createMoon();
 	generateHouse(20, 20, 20);
 	generateOvni(-20, 20, -20);
@@ -136,10 +135,10 @@ function createTerrain() {
   		terrain = new THREE.Mesh(geometry, material);
   		terrain.rotation.x = -Math.PI / 2;
 
-  		const heightMapImage = heightMapTexture.image;
+  		heightMapImage = heightMapTexture.image;
 
 		// Espera até a imagem estar completamente carregada
-		const canvas = document.createElement("canvas");
+		canvas = document.createElement("canvas");
 		canvas.width = heightMapImage.width;
 		canvas.height = heightMapImage.height;
 		const ctx = canvas.getContext("2d");
@@ -147,7 +146,7 @@ function createTerrain() {
 		// Importante: pode ser necessário esperar o onload para garantir que a imagem está acessível
 		heightMapImage.onload = () => {
 		ctx.drawImage(heightMapImage, 0, 0);
-		const imageData = ctx.getImageData(0, 0, heightMapImage.width, heightMapImage.height).data;
+		imageData = ctx.getImageData(0, 0, heightMapImage.width, heightMapImage.height).data;
 		const vertices = geometry.attributes.position;
 		const width = geometry.parameters.widthSegments + 1;
 		const height = geometry.parameters.heightSegments + 1;
@@ -158,12 +157,20 @@ function createTerrain() {
 			const xImg = Math.floor(ix / width * heightMapImage.width);
 			const yImg = Math.floor(iy / height * heightMapImage.height);
 			const pixelIndex = (yImg * heightMapImage.width + xImg) * 4;
-			const heightValue = imageData[pixelIndex] / 255 * 70; // altura normalizada
+			const heightValue = imageData[pixelIndex] / 255 * heightScale; // altura normalizada
 			vertices.setZ(i, heightValue);
 		}
 
 		vertices.needsUpdate = true;
 		geometry.computeVertexNormals();
+
+		const marker = new THREE.Mesh(
+		new THREE.SphereGeometry(0.2),
+		new THREE.MeshBasicMaterial({ color: 0xff0000 })
+		);
+		marker.position.set(50, getYFromHeightMap(49, 10), 10);
+		scene.add(marker);
+		generateTrees(nOfTrees);
 		};
   	// ou força o onload manualmente se já estiver carregada
   	if (heightMapImage.complete) heightMapImage.onload();
@@ -530,7 +537,7 @@ function toggleUFOSpotlights(ufo, enabled) {
 ///////////////////////
 
 function generateTrees(n = 1){
-
+	console.log(getYFromHeightMap(0, 0));
 	let trunk = createMaterial(orangy_brown);
 	let leafs = createMaterial(dark_green);
 
@@ -553,7 +560,7 @@ function generateTrees(n = 1){
 		if (randomAhBool){
 			let rndscale = Math.random() * 0.3 + 0.7;
 			let rndrot = Math.random() * 360;
-			createTree(rndx, getYByRayCast(rndx, rndz), rndz, trunk, leafs, rndscale, rndrot);
+			createTree(rndx, getYFromHeightMap(rndx, rndz), rndz, trunk, leafs, rndscale, rndrot);
 			usedCoords.push([rndx, rndz]);
 			++t;
 		}
@@ -827,17 +834,42 @@ function enableFreeCamera() {
 	controls.autoRotate = false;
 }
 
-function getYByRayCast(x, z){
-	const raycaster = new THREE.Raycaster();
-	const origin = new THREE.Vector3(x, 100, z); // Start above the terrain
-	const direction = new THREE.Vector3(0, -1, 0); // Cast downwards
-	raycaster.set(origin, direction);
-	const intersects = raycaster.intersectObject(terrain);
-	if (intersects.length > 0) {
-		return intersects[0].point.y;
+function getYFromHeightMap(x, z) {
+	if (!heightMapImage || !imageData) return 0;
+
+	const u = THREE.MathUtils.clamp((x + terrainSize / 2) / terrainSize, 0, 1);
+	const v = THREE.MathUtils.clamp(1 - (z + terrainSize / 2) / terrainSize, 0, 1);
+
+	const fx = u * heightMapImage.width;
+	const fy = v * heightMapImage.height;
+
+	const x0 = Math.floor(fx);
+	const x1 = Math.min(x0 + 1, heightMapImage.width - 1);
+	const y0 = Math.floor(fy);
+	const y1 = Math.min(y0 + 1, heightMapImage.height - 1);
+
+	const tx = fx - x0;
+	const ty = fy - y0;
+
+	function getPixelHeight(x, y) {
+		const index = (y * heightMapImage.width + x) * 4;
+		return imageData[index] / 255 * heightScale;
 	}
-	return null;
+
+	const h00 = getPixelHeight(x0, y0);
+	const h10 = getPixelHeight(x1, y0);
+	const h01 = getPixelHeight(x0, y1);
+	const h11 = getPixelHeight(x1, y1);
+
+	// Bilinear interpolation
+	const h0 = h00 * (1 - tx) + h10 * tx;
+	const h1 = h01 * (1 - tx) + h11 * tx;
+	const height = h0 * (1 - ty) + h1 * ty;
+	console.log(`Height at (${x}, ${z}): ${height}`);
+	return height;
 }
+
+
 
 function arraysEqual(a, b) {
     if (a.length !== b.length) return false;
