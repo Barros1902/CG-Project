@@ -27,7 +27,7 @@ let trees = [];
 let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
-let terrainSize = 100, spaceBtwnTrees = 15;
+let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 20;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -106,7 +106,7 @@ function createLights(){
 
 function createObjects() {
 	createTerrain();
-	generateTrees(5);
+	generateTrees(nOfTrees);
 	createMoon();
 	generateHouse(20, 20, 20);
 	generateOvni(-20, 20, -20);
@@ -131,7 +131,7 @@ function createTerrain() {
 
 	const loader = new THREE.TextureLoader();
 	loader.load('js/heightmap3.png', (heightMapTexture) => {
-  		const geometry = new THREE.PlaneGeometry(100, 100, 200, 200);
+  		const geometry = new THREE.PlaneGeometry(terrainSize, terrainSize, 200, 200);
   		const material = new THREE.MeshPhongMaterial({ map: generateTextures(CAMPO) });
   		terrain = new THREE.Mesh(geometry, material);
   		terrain.rotation.x = -Math.PI / 2;
@@ -517,6 +517,7 @@ function toggleUFOLights(ufo, enabled) {
         light.visible = enabled;
     });
 }
+
 function toggleUFOSpotlights(ufo, enabled) {
     ufo.spotlight.forEach(light => {
         light.visible = enabled;
@@ -536,15 +537,23 @@ function generateTrees(n = 1){
 	let usedCoords = [];
 	let t = 0;
 	while(t < n){
-		let rndx = Math.floor(Math.random() * (spaceBtwnTrees + 2)) - 1;
-		rndx = rndx * terrainSize / spaceBtwnTrees;
+		let rndx = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees + 1));
+		rndx = rndx * spaceBtwnTrees;
 		rndx -= terrainSize/2;
-		let rndz = Math.floor(Math.random() * (spaceBtwnTrees + 2)) - 1;
-		rndz = rndz * terrainSize / spaceBtwnTrees;
+		let rndz = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees + 1));
+		rndz = rndz * spaceBtwnTrees;
 		rndz -= terrainSize/2;
+		let randomAhBool = true;
+		usedCoords.forEach((coord) => {
+			if(arraysEqual(coord, [rndx, rndz])){
+				randomAhBool = false;
+			}
+		});
 
-		if (!usedCoords.includes([rndx, rndz])){
-			createTree(rndx, 0, rndz, trunk, leafs, 1);
+		if (randomAhBool){
+			let rndscale = Math.random() * 0.3 + 0.7;
+			let rndrot = Math.random() * 360;
+			createTree(rndx, 6, rndz, trunk, leafs, rndscale, rndrot);
 			usedCoords.push([rndx, rndz]);
 			++t;
 		}
@@ -565,17 +574,17 @@ function createTree(x, y, z, trunk, leafs, scale = 1, rot = 0){
 	// Ramo esquerdo
 	createPart(tree,"cylinder", trunk, -2, 11, -1, 0.5, 6, 0.5, -30, 0, 45);
 	// Copa esquerda
-	createPart(tree,"sphere", leafs, -4, 13, -2, 2, 2, 2);
+	createPart(tree,"sphere", leafs, -4, 13, -2, 2);
 	//Ramo direito
 	createPart(tree,"cylinder", trunk, 1.5, 10.5, 0.75, 1, Math.sqrt(20), 1, 30, 0, -45);
 	//Ramo direito frente
 	createPart(tree,"cylinder", trunk, 1.5, 15, 3.75, 0.5, 8, 0.5, 40, 0, 20);
 	//Copa direita frente
-	createPart(tree,"sphere", leafs, 0, 18, 6, 3, 3, 3);
+	createPart(tree,"sphere", leafs, 0, 18, 6, 3);
 	//Ramo diretio trás
 	createPart(tree,"cylinder", trunk, 6, 13.5, -0.75, 0.5, 8, 0.5, -60, 0, -50);
 	//Copa direita trás
-	createPart(tree,"sphere", leafs, 9, 15, -3, 3, 3, 3);
+	createPart(tree,"sphere", leafs, 9, 15, -3, 3);
 
 	tree.position.set(x, y, z);
 	tree.scale.set(scale, scale, scale);
@@ -817,5 +826,14 @@ function enableFreeCamera() {
 	controls.dampingFactor = 0.05;
 	controls.autoRotate = false;
 }
+
+function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+}
+
 init();
 animate();
