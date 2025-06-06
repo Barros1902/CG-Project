@@ -27,6 +27,7 @@ let trees = [];
 let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
+let terrainSize = 100, spaceBtwnTrees = 15;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -105,7 +106,7 @@ function createLights(){
 
 function createObjects() {
 	createTerrain();
-	generateTrees();
+	generateTrees(5);
 	createMoon();
 	generateHouse(20, 20, 20);
 }
@@ -290,34 +291,22 @@ function onKeyDown(e) {
 		case "Q":
 		case "q":
 			currentMaterialType = LAMBERT;
-			if (!basicOn){
-				switchMaterials(LAMBERT);
-			}
+			switchMaterials(LAMBERT);
 			break;
 		case "W":
 		case "w":
 			currentMaterialType = PHONG;
-			if (!basicOn){
-				switchMaterials(PHONG);
-			}
+			switchMaterials(PHONG);
 			break;
 		case "E":
 		case "e":
 			currentMaterialType = TOON;
-			if (!basicOn){
-				switchMaterials(TOON);
-			}
+			switchMaterials(TOON);
 			break;
 		case "R":
 		case "r":
-			if (!basicOn){
-				basicOn = true;
-				switchMaterials(BASIC);
-			}
-			else{
-				basicOn = false;
-				switchMaterials(currentMaterialType);
-			}
+			currentMaterialType = BASIC;
+			switchMaterials(BASIC);
 			break;
 		case "7":
 			if (activeCamera != perspective){
@@ -460,12 +449,27 @@ function generateHouse(x, y, z) {
 /* GENERATE TREE */
 ///////////////////////
 
-function generateTrees(){
+function generateTrees(n = 1){
 
 	let trunk = createMaterial(orangy_brown);
 	let leafs = createMaterial(dark_green);
 
-	createTree(0, 0, 0, trunk, leafs, 1);
+	let usedCoords = [];
+	let t = 0;
+	while(t < n){
+		let rndx = Math.floor(Math.random() * (spaceBtwnTrees + 2)) - 1;
+		rndx = rndx * terrainSize / spaceBtwnTrees;
+		rndx -= terrainSize/2;
+		let rndz = Math.floor(Math.random() * (spaceBtwnTrees + 2)) - 1;
+		rndz = rndz * terrainSize / spaceBtwnTrees;
+		rndz -= terrainSize/2;
+
+		if (!usedCoords.includes([rndx, rndz])){
+			createTree(rndx, 0, rndz, trunk, leafs, 1);
+			usedCoords.push([rndx, rndz]);
+			++t;
+		}
+	}
 
 	trees.forEach((tree) => {
 		scene.add(tree)
