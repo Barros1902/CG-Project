@@ -27,7 +27,7 @@ let trees = [];
 let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
-let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 20;
+let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 10;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -537,10 +537,10 @@ function generateTrees(n = 1){
 	let usedCoords = [];
 	let t = 0;
 	while(t < n){
-		let rndx = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees + 1));
+		let rndx = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees - 1) + 1);
 		rndx = rndx * spaceBtwnTrees;
 		rndx -= terrainSize/2;
-		let rndz = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees + 1));
+		let rndz = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees - 1) + 1);
 		rndz = rndz * spaceBtwnTrees;
 		rndz -= terrainSize/2;
 		let randomAhBool = true;
@@ -551,6 +551,7 @@ function generateTrees(n = 1){
 		});
 
 		if (randomAhBool){
+			console.log([rndx, rndz]);
 			let rndscale = Math.random() * 0.3 + 0.7;
 			let rndrot = Math.random() * 360;
 			createTree(rndx, getYByRayCast(rndx, rndz), rndz, trunk, leafs, rndscale, rndrot);
