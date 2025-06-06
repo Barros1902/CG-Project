@@ -113,8 +113,8 @@ function createMoon() {
 	const moonGeometry = createSphere(5, 100, 100);
 	const moonMaterial = new THREE.MeshStandardMaterial({
 		color: white,             	// Cor base
-		emissive: 0x000000,          	// Cor da luz emitida
-		emissiveIntensity: 1.5,       	// Intensidade do brilho
+		emissive: yellow,          	// Cor da luz emitida
+		emissiveIntensity: 100,       	// Intensidade do brilho
 		roughness: 0.5,               	// Um pouco rugosa para realismo
 		metalness: 0.1                 	// Pouco metálica
 	});
@@ -128,7 +128,7 @@ function createTerrain() {
 
 	const loader = new THREE.TextureLoader();
 	loader.load('js/heightmap3.png', (heightMapTexture) => {
-  		const geometry = new THREE.PlaneGeometry(100, 100, 700, 700);
+  		const geometry = new THREE.PlaneGeometry(100, 100, 200, 200);
   		const material = new THREE.MeshPhongMaterial({ map: generateTextures(CAMPO) });
   		terrain = new THREE.Mesh(geometry, material);
   		terrain.rotation.x = -Math.PI / 2;
