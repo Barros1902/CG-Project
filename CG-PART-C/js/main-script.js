@@ -132,9 +132,12 @@ function createTerrain() {
 
 	const loader = new THREE.TextureLoader();
 	loader.load('js/heightmap3.png', (heightMapTexture) => {
-  		const geometry = new THREE.PlaneGeometry(terrainSize, terrainSize, 100, 100);
-  		const material = new THREE.MeshPhongMaterial({ map: generateTextures(CAMPO) });
-  		terrain = new THREE.Mesh(geometry, material);
+  		//const geometry = new THREE.PlaneGeometry(terrainSize, terrainSize, 100, 100);
+  		const material = createMaterial(null, null, generateTextures(CAMPO));
+		terrain = createPart(scene, "terrainPlane", material);
+	
+		terrain.material.needsUpdate = true;
+		//terrain = new THREE.Mesh(geometry, material);
   		terrain.rotation.x = -Math.PI / 2;
 
   		heightMapImage = heightMapTexture.image;
@@ -149,9 +152,9 @@ function createTerrain() {
 		heightMapImage.onload = () => {
 		ctx.drawImage(heightMapImage, 0, 0);
 		imageData = ctx.getImageData(0, 0, heightMapImage.width, heightMapImage.height).data;
-		const vertices = geometry.attributes.position;
-		const width = geometry.parameters.widthSegments + 1;
-		const height = geometry.parameters.heightSegments + 1;
+		const vertices = terrain.geometry.attributes.position;
+		const width = terrain.geometry.parameters.widthSegments + 1;
+		const height = terrain.geometry.parameters.heightSegments + 1;
 
 		for (let i = 0; i < vertices.count; i++) {
 			const ix = i % width;
@@ -164,7 +167,7 @@ function createTerrain() {
 		}
 
 		vertices.needsUpdate = true;
-		geometry.computeVertexNormals();
+		terrain.geometry.computeVertexNormals();
 		generateTrees(nOfTrees);
 		};
   	// ou força o onload manualmente se já estiver carregada
@@ -172,6 +175,7 @@ function createTerrain() {
   	scene.add(terrain);
 	});
 
+	/*
 	const skyGEO = new THREE.SphereGeometry(500, 32, 32);
 	const skyMaterial = new THREE.MeshBasicMaterial({
 		map: generateTextures(CEU),
@@ -179,6 +183,9 @@ function createTerrain() {
 	});
 	skydome = new THREE.Mesh(skyGEO, skyMaterial);
 	scene.add(skydome);
+	*/
+	const skyMaterial = createMaterial(null, null, generateTextures(CEU), THREE.BackSide);
+	createPart(scene, "skydome", skyMaterial);
 	
 }
 
@@ -655,6 +662,12 @@ function createPart(obj, shape, materialId, xpos = 0, ypos = 0, zpos = 0, xsize 
 		case "face":
 			geometry = createFace(xsize, ysize);
 			break;
+		case "terrainplane":
+			geometry = new THREE.PlaneGeometry(terrainSize, terrainSize, 100, 100);
+			break;
+		case "skydome":
+			geometry = new THREE.SphereGeometry(500, 32, 32);
+			break;
         default:
             console.error("Shape not recognized:", shape);
             return;
@@ -663,7 +676,9 @@ function createPart(obj, shape, materialId, xpos = 0, ypos = 0, zpos = 0, xsize 
     const mesh = new THREE.Mesh(geometry, materials[materialId][currentMaterialType]);
     mesh.position.set(xpos, ypos, zpos);
 	mesh.rotation.set(xrot * (Math.PI / 180), yrot * (Math.PI / 180), zrot * (Math.PI / 180));
-    obj.add(mesh);
+	if (shape != "terrainPlane" || shape != "skydome") {
+    	obj.add(mesh);
+	}
 	meshs.push([mesh, materialId]);
 
 	return mesh;
@@ -842,11 +857,11 @@ function createFace(width, height) {
     return geometry;
 }
 
-function createMaterial(color = 0xFF0000, wireframe = false) {
-	const lambertMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: wireframe, flatShading: true });
-	const phongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: wireframe});
-	const toontMaterial = new THREE.MeshToonMaterial({ color: color, wireframe: wireframe});
-	const basicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe});
+function createMaterial(color = 0xFF0000, wireframe = false, map = null, side = null) {
+	const lambertMaterial = new THREE.MeshLambertMaterial({ color: color, wireframe: wireframe, flatShading: true, map: map, side: side });
+	const phongMaterial = new THREE.MeshPhongMaterial({ color: color, wireframe: wireframe, map: map, side: side });
+	const toontMaterial = new THREE.MeshToonMaterial({ color: color, wireframe: wireframe, map: map, side: side });
+	const basicMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: wireframe, map: map, side: side });
 	let index = materials.push([lambertMaterial, phongMaterial, toontMaterial, basicMaterial]);
 	return index - 1;
 }
