@@ -28,8 +28,8 @@ let trees = [];
 let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
-let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 10, heightScale = 70, heightMapImage, canvas, imageData;
-let ufoSpeed = 1, ufoSpinSpeed = Math.PI / 8; 
+let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 8, heightScale = 70, heightMapImage, canvas, imageData;
+let ufoSpeed = 10, ufoSpinSpeed = Math.PI / 8; 
 let lastTime = performance.now();
 
 /////////////////////
@@ -110,8 +110,8 @@ function createLights(){
 function createObjects() {
 	createTerrain();
 	createMoon();
-	generateHouse(20, 20, 20);
-	generateOvni(-20, 20, -20);
+	generateHouse(-10, 8, 0);
+	generateOvni(-20, 30, -20);
 }
 
 function createMoon() {
@@ -176,7 +176,7 @@ function createTerrain() {
   	scene.add(terrain);
 	});
 
-	/*
+	
 	const skyGEO = new THREE.SphereGeometry(500, 32, 32);
 	const skyMaterial = new THREE.MeshBasicMaterial({
 		map: generateTextures(CEU),
@@ -184,10 +184,10 @@ function createTerrain() {
 	});
 	skydome = new THREE.Mesh(skyGEO, skyMaterial);
 	scene.add(skydome);
-	*/
+	/*
 	const skyMaterial = createMaterial(null, null, generateTextures(CEU), THREE.BackSide);
 	createPart(scene, "skydome", skyMaterial);
-	
+	*/
 }
 
 //////////////////////
@@ -604,14 +604,14 @@ function generateTrees(n = 1){
 	let trunk = createMaterial(orangy_brown);
 	let leafs = createMaterial(dark_green);
 
-	let usedCoords = [];
+	let usedCoords = [[0,0], [0,-20], [20,0], [20,-20]];
 	let t = 0;
 	while(t < n){
-		let rndx = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees - 1) + 1);
-		rndx = rndx * spaceBtwnTrees;
+		let rndx = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees) + 1);
+		rndx = rndx * spaceBtwnTrees - spaceBtwnTrees/2;
 		rndx -= terrainSize/2;
-		let rndz = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees - 1) + 1);
-		rndz = rndz * spaceBtwnTrees;
+		let rndz = Math.floor(Math.random() * (terrainSize / spaceBtwnTrees) + 1);
+		rndz = rndz * spaceBtwnTrees - spaceBtwnTrees/2;
 		rndz -= terrainSize/2;
 		let randomAhBool = true;
 		usedCoords.forEach((coord) => {
