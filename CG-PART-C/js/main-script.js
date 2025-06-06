@@ -29,7 +29,8 @@ let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
 let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 10, heightScale = 70, heightMapImage, canvas, imageData;
-let ufoSpeed = 0.2;
+let ufoSpeed = 1, ufoSpinSpeed = Math.PI / 8; 
+let lastTime = performance.now();
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -203,19 +204,35 @@ function handleCollisions() {}
 /* UPDATE */
 ////////////
 function update() {
+	const dt = getDeltaTime();
+	spinUfo(dt);
 
 	if(ArrowLeft && !ArrowRight){
-		ufo.position.x += ufoSpeed;
+		ufo.position.x += ufoSpeed * dt;
 	}
 	if(ArrowRight && !ArrowLeft){
-		ufo.position.x -= ufoSpeed;
+		ufo.position.x -= ufoSpeed * dt;
 	}
 	if(ArrowUp && !ArrowDown){
-		ufo.position.z += ufoSpeed;
+		ufo.position.z += ufoSpeed * dt;
 	}
 	if(ArrowDown && !ArrowUp){
-		ufo.position.z -= ufoSpeed;
+		ufo.position.z -= ufoSpeed * dt;
 	}
+}
+
+function spinUfo(dt) {
+	ufo.rotation.y += ufoSpinSpeed * dt;
+	if (ufo.rotation.y > Math.PI * 2) {
+		ufo.rotation.y -= Math.PI * 2;
+	}
+}
+
+function getDeltaTime() {
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - lastTime) / 1000; // Convert milliseconds to seconds
+    lastTime = currentTime;
+    return deltaTime;
 }
 
 /////////////
