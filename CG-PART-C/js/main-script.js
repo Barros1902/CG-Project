@@ -561,6 +561,8 @@ function generateOvni(x, y, z) {
     ovni.position.set(x, y, z);
     scene.add(ovni);
 	ufo = ovni; // Store the UFO globally for later use
+	ufo.lightsOn = true;
+	ufo.spotlightOn = true;
     return ovni;
 }
 
