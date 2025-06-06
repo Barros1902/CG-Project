@@ -553,7 +553,7 @@ function generateTrees(n = 1){
 		if (randomAhBool){
 			let rndscale = Math.random() * 0.3 + 0.7;
 			let rndrot = Math.random() * 360;
-			createTree(rndx, 6, rndz, trunk, leafs, rndscale, rndrot);
+			createTree(rndx, getYByRayCast(rndx, rndz), rndz, trunk, leafs, rndscale, rndrot);
 			usedCoords.push([rndx, rndz]);
 			++t;
 		}
