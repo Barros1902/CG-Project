@@ -86,7 +86,7 @@ function createLights(){
 
 	const moonLight = new THREE.PointLight(white, 1000); // cor, intensidade
 	moonLight.position.copy(moon.position);
-	//scene.add(moonLight);
+	scene.add(moonLight);
 
 	directionalLight = new THREE.DirectionalLight(white, 0.5); // cor, intensidade
 	directionalLight.position.set(30, 50, 30); // Posição da luz
@@ -108,6 +108,7 @@ function createObjects() {
 	generateTrees();
 	createMoon();
 	generateHouse(20, 20, 20);
+	generateOvni(-20, 20, -20);
 }
 
 function createMoon() {
@@ -270,6 +271,8 @@ function onResize() {
 ///////////////////////
 
 function onKeyDown(e) {
+	
+	const ufo = scene.children.find(child => child.spotlight); // Find the UFO
 	switch (e.key){
 		case "1":
 			currentTextureType = CAMPO;
@@ -325,6 +328,20 @@ function onKeyDown(e) {
 			}
 			else {
 				activeCamera = moving
+			}
+			break;
+		case "P":
+		case "p":
+			if (ufo) {
+				ufo.lightsOn = !ufo.lightsOn; // Toggle state
+				toggleUFOLights(ufo, ufo.lightsOn);
+			}
+			break;
+		case "S":
+		case "s":
+			if (ufo) {
+				ufo.spotlightOn = !ufo.spotlightOn; // Toggle state
+				toggleUFOSpotlights(ufo, ufo.spotlightOn);
 			}
 			break;
 	}
@@ -437,7 +454,6 @@ function generateHouse(x, y, z) {
 	createPart(house,"face", roof, 29.99, 12, 0, 4, 6.3, 0, 270+28.5, 90, 0);
 	createPart(house,"face", roof, 0.01, 12, 0, 6.3, 4, 0, 28.5, 270, 180);
 	createPart(house,"face", roof, 0.01, 12, -11, 4, 6.3, 0, 270-28.5, 270, 180);
-
 	//janelas
 	createPart(house,"face", window, 4, 3, 0.01, 5, 5, 0, 0, 0, 0);
 	createPart(house,"face", window, 21, 3, 0.01, 5, 5, 0, 0, 0, 0);
@@ -446,14 +462,77 @@ function generateHouse(x, y, z) {
 	//porta
 	createPart(house,"face", door, 12.5, 0, 0.01, 5, 8, 0, 0, 0, 0);
 
-
-
-
 	house.position.set(x, y, z);
 	scene.add(house);
 
 }
 
+
+///////////////////////
+/* GENERATE OVNI */
+///////////////////////
+
+
+function generateOvni(x, y, z) {	
+    let ovni = new THREE.Object3D();
+    let metal = createMaterial(white);
+    let glass = createMaterial(light_blue);
+    
+    // Store lights for later control
+    ovni.lights = [];
+    ovni.spotlight = []; // Fixed: changed from spotlights to spotlight
+
+    // Body
+    createPart(ovni, "sphere", metal, 0, -2, 0, 9, 3*Math.PI/4, Math.PI/4, 180);
+    // Dome
+    createPart(ovni, "sphere", glass, 0, 6, 0, 3, Math.PI/2, Math.PI/2, 180);
+    // Bottom
+    createPart(ovni, "cylinder", metal, 0, 4.5, 0, 2, 2, 2);
+    
+    // Calculate and create sphere lights
+    const radius = 4.5;
+    for (let angle = 0; angle < 360; angle += 45) {
+        const angleRad = angle * (Math.PI / 180);
+        const xPos = radius * Math.cos(angleRad);
+        const zPos = radius * Math.sin(angleRad);
+        
+        // Create sphere
+        createPart(ovni, "sphere", metal, xPos, 4.5, zPos, 1);
+        
+        const sphereLight = new THREE.PointLight(white, 5);
+        sphereLight.position.set(xPos, 2.5, zPos);
+        ovni.add(sphereLight);
+        ovni.lights.push(sphereLight);
+    }
+
+    // Add spotlight
+    const spotlight = new THREE.SpotLight(white, 600);
+    spotlight.position.set(0, 3, 0);
+    spotlight.angle = Math.PI/12;
+    spotlight.penumbra = 0.2;
+    spotlight.decay = 1;
+    spotlight.distance = 100;
+    spotlight.target.position.set(0, -10, 0);
+
+    ovni.add(spotlight);
+    ovni.add(spotlight.target);
+    ovni.spotlight.push(spotlight);
+
+    ovni.position.set(x, y, z);
+    scene.add(ovni);
+    return ovni;
+}
+
+function toggleUFOLights(ufo, enabled) {
+    ufo.lights.forEach(light => {
+        light.visible = enabled;
+    });
+}
+function toggleUFOSpotlights(ufo, enabled) {
+    ufo.spotlight.forEach(light => {
+        light.visible = enabled;
+    });
+}
 
 
 ///////////////////////
@@ -509,7 +588,7 @@ function createPart(obj, shape, materialId, xpos = 0, ypos = 0, zpos = 0, xsize 
 
     switch (shape.toLowerCase()) {
         case "sphere":
-            geometry = createSphere(xsize, 100, 100);
+            geometry = createSphere(xsize, 100, 100, ysize, zsize);
             break;
 		case "cylinder":
 			geometry = createCylinder(xsize, ysize, zsize, 100);
@@ -605,27 +684,33 @@ function createCylinder(xsize = 1, height = 2, zsize = 1, radialSegments = 32) {
     return geometry;
 }
 
-function createSphere(radius = 1, widthSegments = 32, heightSegments = 16) {
+function createSphere(radius = 1, widthSegments = 32, heightSegments = 16, phiStart = 0,  phiLength = Math.PI) {
+	if (phiLength == 1) {
+		phiLength = Math.PI;
+		phiStart = 0;
+	}
     const geometry = new THREE.BufferGeometry();
     const positions = [];
     const indices = [];
 
+    // Create sphere vertices
     for (let y = 0; y <= heightSegments; y++) {
         const v = y / heightSegments;
-        const phi = v * Math.PI;
+        const phi = phiStart + v * phiLength;
 
         for (let x = 0; x <= widthSegments; x++) {
             const u = x / widthSegments;
             const theta = u * Math.PI * 2;
 
             const px = -radius * Math.cos(theta) * Math.sin(phi);
-            const py =  radius * Math.cos(phi);
-            const pz =  radius * Math.sin(theta) * Math.sin(phi);
+            const py = radius * Math.cos(phi);
+            const pz = radius * Math.sin(theta) * Math.sin(phi);
 
             positions.push(px, py, pz);
         }
     }
 
+    // Create sphere triangles
     for (let y = 0; y < heightSegments; y++) {
         for (let x = 0; x < widthSegments; x++) {
             const a = y * (widthSegments + 1) + x;
@@ -633,6 +718,35 @@ function createSphere(radius = 1, widthSegments = 32, heightSegments = 16) {
 
             indices.push(a, b, a + 1);
             indices.push(b, b + 1, a + 1);
+        }
+    }
+
+    // Add cap vertices and triangles if sphere is truncated
+    if (phiLength < Math.PI) {
+        const capCenter = [0, radius * Math.cos(phiStart), 0];
+        const startIndex = positions.length / 3;
+        positions.push(...capCenter);
+
+        // Add vertices for the cap edge
+        for (let x = 0; x <= widthSegments; x++) {
+            const u = x / widthSegments;
+            const theta = u * Math.PI * 2;
+            const phi = phiStart;
+
+            const px = -radius * Math.cos(theta) * Math.sin(phi);
+            const py = radius * Math.cos(phi);
+            const pz = radius * Math.sin(theta) * Math.sin(phi);
+
+            positions.push(px, py, pz);
+        }
+
+        // Create triangles for the cap
+        for (let x = 0; x < widthSegments; x++) {
+            indices.push(
+                startIndex, // cap center
+                startIndex + x + 1,
+                startIndex + x + 2
+            );
         }
     }
 
