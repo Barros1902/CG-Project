@@ -827,6 +827,18 @@ function enableFreeCamera() {
 	controls.autoRotate = false;
 }
 
+function getYByRayCast(x, z){
+	const raycaster = new THREE.Raycaster();
+	const origin = new THREE.Vector3(x, 100, z); // Start above the terrain
+	const direction = new THREE.Vector3(0, -1, 0); // Cast downwards
+	raycaster.set(origin, direction);
+	const intersects = raycaster.intersectObject(terrain);
+	if (intersects.length > 0) {
+		return intersects[0].point.y;
+	}
+	return null;
+}
+
 function arraysEqual(a, b) {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
