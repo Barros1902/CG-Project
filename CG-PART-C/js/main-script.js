@@ -9,6 +9,7 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";*/
 //////////////////////
 const CAMPO = 0, CEU = 1;
 const LAMBERT = 0, PHONG = 1, TOON = 2, BASIC = 3;
+let ArrowUp = false, ArrowDown = false, ArrowLeft = false, ArrowRight = false;
 let scene, camera, cameras = [], activeCamera, moving, perspective, stereo, renderer, controls;
 let frustumSize = 35;
 let lightEnabled = true, directionalLight;
@@ -22,12 +23,13 @@ let white = new THREE.Color(0xffffff),
 	dark_violet = new THREE.Color(0x9400D3),
 	orangy_brown = new THREE.Color(0x994f0b),
 	dark_green = new THREE.Color(0x045700);
-let terrain, skydome, moon;
+let terrain, skydome, moon, ufo;
 let trees = [];
 let materials = [];
 let currentMaterialType = LAMBERT, basicOn = false;
 let meshs = [];
-let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 10;
+let terrainSize = 100, spaceBtwnTrees = 20, nOfTrees = 0;
+let ufoSpeed = 0.2;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -193,7 +195,21 @@ function handleCollisions() {}
 ////////////
 /* UPDATE */
 ////////////
-function update() {}
+function update() {
+
+	if(ArrowLeft && !ArrowRight){
+		ufo.position.x += ufoSpeed;
+	}
+	if(ArrowRight && !ArrowLeft){
+		ufo.position.x -= ufoSpeed;
+	}
+	if(ArrowUp && !ArrowDown){
+		ufo.position.z += ufoSpeed;
+	}
+	if(ArrowDown && !ArrowUp){
+		ufo.position.z -= ufoSpeed;
+	}
+}
 
 /////////////
 /* DISPLAY */
@@ -228,6 +244,7 @@ function init() {
 	render();
 	window.addEventListener("resize", onResize);
 	window.addEventListener("keydown", onKeyDown);
+	window.addEventListener("keyup", onKeyUp);
 
 }
 
@@ -236,6 +253,7 @@ function init() {
 /////////////////////
 function animate() {
     renderer.setAnimationLoop(() => {
+		update();
         render();
     });
 }
@@ -272,8 +290,6 @@ function onResize() {
 ///////////////////////
 
 function onKeyDown(e) {
-	
-	const ufo = scene.children.find(child => child.spotlight); // Find the UFO
 	switch (e.key){
 		case "1":
 			currentTextureType = CAMPO;
@@ -333,13 +349,42 @@ function onKeyDown(e) {
 				toggleUFOSpotlights(ufo, ufo.spotlightOn);
 			}
 			break;
+
+		case "ArrowUp":
+            ArrowUp = true;
+            break;
+        case "ArrowDown":
+            ArrowDown = true;
+            break;
+        case "ArrowLeft":
+            ArrowLeft = true;
+            break;
+        case "ArrowRight":
+            ArrowRight = true;
+            break;
+ 
 	}
 }
 
 ///////////////////////
 /* KEY UP CALLBACK */
 ///////////////////////
-function onKeyUp(e) {}
+function onKeyUp(e) {
+	switch (e.key) {
+		case "ArrowUp":
+            ArrowUp = false;
+            break;
+        case "ArrowDown":
+            ArrowDown = false;
+            break;
+        case "ArrowLeft":
+            ArrowLeft = false;
+            break;
+        case "ArrowRight":
+            ArrowRight = false;
+            break;
+		}
+}
 
 ///////////////////////
 /* GENERATE TEXTURES */
@@ -509,6 +554,7 @@ function generateOvni(x, y, z) {
 
     ovni.position.set(x, y, z);
     scene.add(ovni);
+	ufo = ovni; // Store the UFO globally for later use
     return ovni;
 }
 
