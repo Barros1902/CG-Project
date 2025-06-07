@@ -88,9 +88,9 @@ function createCameras() {
 
 function createLights(){
 
-	const moonLight = new THREE.PointLight(white, 1000); // cor, intensidade
+	/*const moonLight = new THREE.PointLight(white, 1000); // cor, intensidade
 	moonLight.position.copy(moon.position);
-	scene.add(moonLight);
+	scene.add(moonLight);*/
 
 	directionalLight = new THREE.DirectionalLight(white, 0.5); // cor, intensidade
 	directionalLight.position.set(30, 50, 30); // Posição da luz
